@@ -1,0 +1,87 @@
+/* ============================= */
+/* ========= CSS RESET ========= */
+/* ============================= */
+
+/* Box sizing rule */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+/* Remove default margin */
+* {
+  margin: 0;
+  padding: 0;
+}
+
+/* HTML & Body */
+html,
+body {
+  height: 100%;
+  scroll-behavior: smooth;
+}
+
+/* Body defaults */
+body {
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* Remove list styles */
+ul,
+ol {
+  list-style: none;
+}
+
+/* Remove default anchor styles */
+a {
+  text-decoration: none;
+  color: inherit;
+}
+
+/* Media elements */
+img,
+picture,
+video,
+canvas,
+svg {
+  display: block;
+  max-width: 100%;
+}
+
+/* Form elements inherit font */
+input,
+button,
+textarea,
+select {
+  font: inherit;
+}
+
+/* Button reset */
+button {
+  border: none;
+  background: none;
+  cursor: pointer;
+}
+
+/* Remove textarea resize by default */
+textarea {
+  resize: none;
+}
+
+/* Table reset */
+table {
+  border-collapse: collapse;
+  border-spacing: 0;
+}
+
+/* Remove animations for users who prefer reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation: none !important;
+    transition: none !important;
+    scroll-behavior: auto !important;
+  }
+}

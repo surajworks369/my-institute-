@@ -4,21 +4,21 @@ const STORAGE_KEY = 'erp_students'
 
 export function getStudents(): Student[] {
   const data = localStorage.getItem(STORAGE_KEY)
-  return data ? JSON.parse(data) : []
+  return data ? (JSON.parse(data) as Student[]) : []
 }
 
-export function addStudent(student: Student) {
+export function addStudent(student: Student): void {
   const students = getStudents()
   students.push(student)
   localStorage.setItem(STORAGE_KEY, JSON.stringify(students))
 }
 
-export function updateStudent(updated: Student) {
+export function updateStudent(updated: Student): void {
   const students = getStudents().map((s) => (s.id === updated.id ? updated : s))
   localStorage.setItem(STORAGE_KEY, JSON.stringify(students))
 }
 
-export function deleteStudent(id: string) {
+export function deleteStudent(id: number): void {
   const students = getStudents().filter((s) => s.id !== id)
   localStorage.setItem(STORAGE_KEY, JSON.stringify(students))
 }

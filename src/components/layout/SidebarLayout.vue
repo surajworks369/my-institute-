@@ -1,130 +1,195 @@
 <template>
-  <aside :class="['sidebar', { collapsed }]">
-    <!-- Header -->
+  <aside :class="['sidebar', { collapsed, 'mobile-open': mobileOpen, 'mobile-mode': isMobile }]">
     <div class="sidebar-header">
-      <div v-if="!collapsed" class="title-wrap">
+      <div v-if="!collapsed || isMobile" class="title-wrap">
         <h2 class="title">
           <span>Admin</span>
           <span>Panel</span>
         </h2>
       </div>
 
-      <button
-        class="toggle-btn"
-        type="button"
-        @click="toggleSidebar"
-        :title="collapsed ? 'Expand Sidebar' : 'Collapse Sidebar'"
-      >
-        {{ collapsed ? '➡' : '⬅' }}
-      </button>
+      <div class="header-actions">
+        <button
+          v-if="!isMobile"
+          class="toggle-btn"
+          type="button"
+          @click="toggleSidebar"
+          :title="collapsed ? 'Expand Sidebar' : 'Collapse Sidebar'"
+        >
+          {{ collapsed ? '➡' : '⬅' }}
+        </button>
+
+        <button
+          v-if="isMobile"
+          class="toggle-btn"
+          type="button"
+          @click="emitCloseMobile"
+          title="Close Sidebar"
+        >
+          ✕
+        </button>
+      </div>
     </div>
 
-    <!-- Menu Scroll Area -->
     <div class="sidebar-menu-scroll">
       <nav class="menu">
-        <!-- Dashboard -->
         <RouterLink
           to="/dashboard"
           class="menu-item"
           active-class="active"
-          :title="collapsed ? 'Dashboard' : ''"
+          :title="collapsed && !isMobile ? 'Dashboard' : ''"
+          @click="handleMenuClick"
         >
           <span class="icon">🏠</span>
-          <span v-if="!collapsed" class="label">Dashboard</span>
+          <span v-if="!collapsed || isMobile" class="label">Dashboard</span>
         </RouterLink>
 
-        <!-- Academic -->
         <div v-if="isAcademicVisible" class="menu-group">
           <div
             class="menu-title"
             @click="toggleGroup('academic')"
-            :title="collapsed ? 'Academic' : ''"
+            :title="collapsed && !isMobile ? 'Academic' : ''"
           >
             <div class="menu-title-left">
               <span class="icon">🎓</span>
-              <span v-if="!collapsed" class="label">Academic</span>
+              <span v-if="!collapsed || isMobile" class="label">Academic</span>
             </div>
 
-            <span v-if="!collapsed" class="arrow" :class="{ open: openGroups.academic }">⌄</span>
+            <span
+              v-if="!collapsed || isMobile"
+              class="arrow"
+              :class="{ open: openGroups.academic }"
+            >
+              ⌄
+            </span>
           </div>
 
           <transition name="slide">
-            <div v-show="openGroups.academic && !collapsed" class="submenu">
-              <RouterLink to="/students" class="submenu-item" active-class="active">
+            <div v-show="openGroups.academic && (!collapsed || isMobile)" class="submenu">
+              <RouterLink
+                to="/students"
+                class="submenu-item"
+                active-class="active"
+                @click="handleMenuClick"
+              >
                 <span class="label">Students</span>
               </RouterLink>
 
-              <RouterLink to="/courses" class="submenu-item" active-class="active">
+              <RouterLink
+                to="/courses"
+                class="submenu-item"
+                active-class="active"
+                @click="handleMenuClick"
+              >
                 <span class="label">Courses</span>
               </RouterLink>
 
-              <RouterLink to="/batches" class="submenu-item" active-class="active">
+              <RouterLink
+                to="/batches"
+                class="submenu-item"
+                active-class="active"
+                @click="handleMenuClick"
+              >
                 <span class="label">Batches</span>
               </RouterLink>
 
-              <RouterLink to="/attendance" class="submenu-item" active-class="active">
+              <RouterLink
+                to="/attendance"
+                class="submenu-item"
+                active-class="active"
+                @click="handleMenuClick"
+              >
                 <span class="label">Attendance</span>
               </RouterLink>
 
-              <RouterLink to="/exams" class="submenu-item" active-class="active">
+              <RouterLink
+                to="/exams"
+                class="submenu-item"
+                active-class="active"
+                @click="handleMenuClick"
+              >
                 <span class="label">Exams</span>
               </RouterLink>
             </div>
           </transition>
         </div>
 
-        <!-- Finance -->
         <div v-if="isFinanceVisible" class="menu-group">
           <div
             class="menu-title"
             @click="toggleGroup('finance')"
-            :title="collapsed ? 'Finance' : ''"
+            :title="collapsed && !isMobile ? 'Finance' : ''"
           >
             <div class="menu-title-left">
               <span class="icon">💰</span>
-              <span v-if="!collapsed" class="label">Finance</span>
+              <span v-if="!collapsed || isMobile" class="label">Finance</span>
             </div>
 
-            <span v-if="!collapsed" class="arrow" :class="{ open: openGroups.finance }">⌄</span>
+            <span v-if="!collapsed || isMobile" class="arrow" :class="{ open: openGroups.finance }">
+              ⌄
+            </span>
           </div>
 
           <transition name="slide">
-            <div v-show="openGroups.finance && !collapsed" class="submenu">
-              <RouterLink to="/fees" class="submenu-item" active-class="active">
+            <div v-show="openGroups.finance && (!collapsed || isMobile)" class="submenu">
+              <RouterLink
+                to="/fees"
+                class="submenu-item"
+                active-class="active"
+                @click="handleMenuClick"
+              >
                 <span class="label">Fees</span>
               </RouterLink>
 
-              <RouterLink to="/reports" class="submenu-item" active-class="active">
+              <RouterLink
+                to="/reports"
+                class="submenu-item"
+                active-class="active"
+                @click="handleMenuClick"
+              >
                 <span class="label">Reports</span>
               </RouterLink>
             </div>
           </transition>
         </div>
 
-        <!-- Administration -->
         <div v-if="role === 'admin'" class="menu-group">
           <div
             class="menu-title"
             @click="toggleGroup('administration')"
-            :title="collapsed ? 'Administration' : ''"
+            :title="collapsed && !isMobile ? 'Administration' : ''"
           >
             <div class="menu-title-left">
               <span class="icon">⚙️</span>
-              <span v-if="!collapsed" class="label">Administration</span>
+              <span v-if="!collapsed || isMobile" class="label">Administration</span>
             </div>
 
-            <span v-if="!collapsed" class="arrow" :class="{ open: openGroups.administration }">
+            <span
+              v-if="!collapsed || isMobile"
+              class="arrow"
+              :class="{ open: openGroups.administration }"
+            >
               ⌄
             </span>
           </div>
 
           <transition name="slide">
-            <div v-show="openGroups.administration && !collapsed" class="submenu">
-              <RouterLink to="/staff" class="submenu-item" active-class="active">
+            <div v-show="openGroups.administration && (!collapsed || isMobile)" class="submenu">
+              <RouterLink
+                to="/staff"
+                class="submenu-item"
+                active-class="active"
+                @click="handleMenuClick"
+              >
                 <span class="label">Staff</span>
               </RouterLink>
 
-              <RouterLink to="/settings" class="submenu-item" active-class="active">
+              <RouterLink
+                to="/settings"
+                class="submenu-item"
+                active-class="active"
+                @click="handleMenuClick"
+              >
                 <span class="label">Settings</span>
               </RouterLink>
             </div>
@@ -136,15 +201,25 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue'
+import { ref, computed, watch, onMounted, onBeforeUnmount } from 'vue'
 import { useRoute } from 'vue-router'
 
 type GroupKey = 'academic' | 'finance' | 'administration'
+
+const { mobileOpen } = defineProps<{
+  mobileOpen: boolean
+}>()
+
+const emit = defineEmits<{
+  (e: 'close-mobile'): void
+  (e: 'toggle-mobile'): void
+}>()
 
 const route = useRoute()
 
 const collapsed = ref(false)
 const role = ref<'admin' | 'staff' | 'finance'>('admin')
+const isMobile = ref(false)
 
 const isAcademicVisible = computed(() => role.value === 'admin' || role.value === 'staff')
 const isFinanceVisible = computed(() => role.value === 'admin' || role.value === 'finance')
@@ -155,13 +230,32 @@ const openGroups = ref<Record<GroupKey, boolean>>({
   administration: false,
 })
 
+const checkMobile = () => {
+  isMobile.value = window.innerWidth <= 1024
+
+  if (isMobile.value) {
+    collapsed.value = false
+  }
+}
+
 const toggleSidebar = () => {
+  if (isMobile.value) return
   collapsed.value = !collapsed.value
 }
 
 const toggleGroup = (group: GroupKey) => {
-  if (collapsed.value) return
+  if (collapsed.value && !isMobile.value) return
   openGroups.value[group] = !openGroups.value[group]
+}
+
+const emitCloseMobile = () => {
+  emit('close-mobile')
+}
+
+const handleMenuClick = () => {
+  if (isMobile.value) {
+    emit('close-mobile')
+  }
 }
 
 watch(
@@ -187,6 +281,15 @@ watch(
   },
   { immediate: true },
 )
+
+onMounted(() => {
+  checkMobile()
+  window.addEventListener('resize', checkMobile)
+})
+
+onBeforeUnmount(() => {
+  window.removeEventListener('resize', checkMobile)
+})
 </script>
 
 <style scoped>
@@ -208,9 +311,11 @@ watch(
     width 0.3s ease,
     min-width 0.3s ease,
     max-width 0.3s ease,
-    flex-basis 0.3s ease;
+    flex-basis 0.3s ease,
+    transform 0.3s ease;
   overflow: hidden;
   box-sizing: border-box;
+  z-index: 90;
 }
 
 .sidebar.collapsed {
@@ -230,6 +335,12 @@ watch(
   background: rgba(255, 255, 255, 0.02);
   backdrop-filter: blur(10px);
   flex-shrink: 0;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .sidebar.collapsed .sidebar-header {
@@ -252,10 +363,6 @@ watch(
   font-size: 22px;
   font-weight: 900;
   letter-spacing: 0.02em;
-  color: #ffffff;
-}
-
-.title span:first-child {
   color: #ffffff;
 }
 
@@ -290,15 +397,10 @@ watch(
   overflow-y: auto;
   overflow-x: hidden;
   padding: 14px 12px 24px;
-  background: transparent;
 }
 
 .sidebar-menu-scroll::-webkit-scrollbar {
   width: 6px;
-}
-
-.sidebar-menu-scroll::-webkit-scrollbar-track {
-  background: transparent;
 }
 
 .sidebar-menu-scroll::-webkit-scrollbar-thumb {
@@ -306,24 +408,16 @@ watch(
   border-radius: 999px;
 }
 
-.sidebar-menu-scroll::-webkit-scrollbar-thumb:hover {
-  background: rgba(148, 163, 184, 0.56);
-}
-
 .menu {
   display: flex;
   flex-direction: column;
   gap: 8px;
-  background: transparent !important;
-  border: none !important;
-  box-shadow: none !important;
 }
 
 .menu-group {
   display: flex;
   flex-direction: column;
   gap: 6px;
-  background: transparent;
 }
 
 .menu-item,
@@ -379,7 +473,6 @@ watch(
   margin-top: 2px;
   margin-left: 12px;
   border-left: 1px solid rgba(148, 163, 184, 0.2);
-  background: transparent;
 }
 
 .submenu-item {
@@ -470,5 +563,28 @@ watch(
   opacity: 1;
   transform: translateY(0);
   max-height: 400px;
+}
+
+@media (max-width: 1024px) {
+  .sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 280px;
+    min-width: 280px;
+    max-width: 280px;
+    flex: none;
+    transform: translateX(-100%);
+  }
+
+  .sidebar.mobile-open {
+    transform: translateX(0);
+  }
+
+  .sidebar.collapsed {
+    width: 280px;
+    min-width: 280px;
+    max-width: 280px;
+  }
 }
 </style>

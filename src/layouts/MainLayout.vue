@@ -1,8 +1,19 @@
 <template>
   <div class="layout-shell">
-    <Sidebar />
+    <Sidebar
+      :mobile-open="mobileSidebarOpen"
+      @close-mobile="closeMobileSidebar"
+      @toggle-mobile="toggleMobileSidebar"
+    />
+
+    <div v-if="mobileSidebarOpen" class="mobile-overlay" @click="closeMobileSidebar"></div>
 
     <div class="main-shell">
+      <div class="mobile-topbar">
+        <button class="mobile-menu-btn" type="button" @click="toggleMobileSidebar">☰</button>
+        <div class="mobile-title">Institute ERP</div>
+      </div>
+
       <Navbar />
 
       <main ref="contentShellRef" class="content-shell">
@@ -17,7 +28,7 @@
 </template>
 
 <script setup lang="ts">
-import { nextTick, ref, watch } from 'vue'
+import { ref, watch, nextTick, onMounted, onBeforeUnmount } from 'vue'
 import { useRoute } from 'vue-router'
 import Sidebar from '../components/layout/SidebarLayout.vue'
 import Navbar from '../components/layout/NavbarLayout.vue'
@@ -25,26 +36,46 @@ import Footer from '../components/layout/FooterLayout.vue'
 
 const route = useRoute()
 const contentShellRef = ref<HTMLElement | null>(null)
+const mobileSidebarOpen = ref(false)
+const isMobile = ref(false)
 
-const scrollContentToTop = async () => {
-  await nextTick()
+const checkMobile = () => {
+  isMobile.value = window.innerWidth <= 1024
 
-  if (contentShellRef.value) {
-    contentShellRef.value.scrollTo({
-      top: 0,
-      left: 0,
-      behavior: 'auto',
-    })
+  if (!isMobile.value) {
+    mobileSidebarOpen.value = false
   }
+}
+
+const toggleMobileSidebar = () => {
+  if (isMobile.value) {
+    mobileSidebarOpen.value = !mobileSidebarOpen.value
+  }
+}
+
+const closeMobileSidebar = () => {
+  mobileSidebarOpen.value = false
 }
 
 watch(
   () => route.fullPath,
   async () => {
-    await scrollContentToTop()
+    await nextTick()
+
+    if (isMobile.value) {
+      closeMobileSidebar()
+    }
   },
-  { immediate: true },
 )
+
+onMounted(() => {
+  checkMobile()
+  window.addEventListener('resize', checkMobile)
+})
+
+onBeforeUnmount(() => {
+  window.removeEventListener('resize', checkMobile)
+})
 </script>
 
 <style scoped>
@@ -53,7 +84,7 @@ watch(
   height: 100vh;
   overflow: hidden;
   background: linear-gradient(180deg, #f8fafc 0%, #eef2f7 100%);
-  transition: all 0.3s ease;
+  position: relative;
 }
 
 .main-shell {
@@ -63,6 +94,7 @@ watch(
   display: grid;
   grid-template-rows: 78px minmax(0, 1fr) 56px;
   overflow: hidden;
+  position: relative;
 }
 
 .content-shell {
@@ -70,13 +102,20 @@ watch(
   overflow-y: auto;
   overflow-x: hidden;
   background: linear-gradient(180deg, #f8fafc 0%, #eef2f7 100%);
-  scroll-behavior: smooth;
 }
 
 .content-inner {
   min-height: 100%;
   padding: 20px;
   box-sizing: border-box;
+}
+
+.mobile-topbar {
+  display: none;
+}
+
+.mobile-overlay {
+  display: none;
 }
 
 :global(.dark) .layout-shell {
@@ -91,7 +130,6 @@ watch(
   color: #f8fafc;
 }
 
-/* content scrollbar */
 .content-shell::-webkit-scrollbar {
   width: 10px;
 }
@@ -107,5 +145,50 @@ watch(
 
 .content-shell::-webkit-scrollbar-thumb:hover {
   background: rgba(100, 116, 139, 0.7);
+}
+
+@media (max-width: 1024px) {
+  .main-shell {
+    grid-template-rows: 60px 78px minmax(0, 1fr) 56px;
+  }
+
+  .mobile-topbar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 0 16px;
+    background: #ffffff;
+    border-bottom: 1px solid rgba(148, 163, 184, 0.18);
+    z-index: 40;
+  }
+
+  .mobile-menu-btn {
+    width: 42px;
+    height: 42px;
+    border: none;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #3b82f6, #4f46e5);
+    color: white;
+    font-size: 20px;
+    cursor: pointer;
+  }
+
+  .mobile-title {
+    font-size: 18px;
+    font-weight: 700;
+    color: #1e293b;
+  }
+
+  .mobile-overlay {
+    display: block;
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.45);
+    z-index: 80;
+  }
+
+  .content-inner {
+    padding: 14px;
+  }
 }
 </style>

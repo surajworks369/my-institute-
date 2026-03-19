@@ -1,4 +1,16 @@
-// src/stores/settingsStore.ts
+/**
+ * `stores/settingsStore.ts` (Settings Store / Pinia)
+ *
+ * - **कशासाठी**: Institute/Academic/Fees/System settings state manage करणे (forms साठी).
+ * - **Project मधली role**: Settings pages मध्ये inputs bind करून preferences persist करतो.
+ * - **Logic प्रकार**:
+ *   - localStorage persistence (`STORAGE_KEY`)
+ *   - defaultSettings वर merge (partial saved settings सुद्धा safe)
+ * - **File प्रकार**: store (frontend / Pinia)
+ *
+ * Note: सध्या settings localStorage मध्ये आहेत. पुढे multi-user backend आल्यावर
+ * settings per-institute/per-user API ने load/save होतील.
+ */
 
 import { defineStore } from 'pinia'
 import type {
@@ -10,8 +22,10 @@ import type {
 } from '@/types/settings'
 import { defaultSettings } from '@/types/settings'
 
+// localStorage key: settings persistence साठी
 const STORAGE_KEY = 'vbh_settings_v1'
 
+// localStorage → settings load (defaultSettings merge सह)
 function loadSettings(): SettingsState {
   try {
     const raw = localStorage.getItem(STORAGE_KEY)
@@ -45,6 +59,7 @@ function loadSettings(): SettingsState {
   }
 }
 
+// settings persist
 function saveSettings(settings: SettingsState) {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(settings))
 }
@@ -63,6 +78,7 @@ export const useSettingsStore = defineStore('settings', {
   },
 
   actions: {
+    // Init: storage मधून state hydrate (एकदाच)
     init() {
       if (this.loaded) return
 
@@ -76,26 +92,31 @@ export const useSettingsStore = defineStore('settings', {
       this.loaded = true
     },
 
+    // Institute settings update
     updateInstitute(data: InstituteSettings) {
       this.institute = { ...data }
       this.persist()
     },
 
+    // Academic settings update
     updateAcademic(data: AcademicSettings) {
       this.academic = { ...data }
       this.persist()
     },
 
+    // Fees settings update
     updateFees(data: FeesSettings) {
       this.fees = { ...data }
       this.persist()
     },
 
+    // System settings update
     updateSystem(data: SystemSettings) {
       this.system = { ...data }
       this.persist()
     },
 
+    // Reset: सर्व settings default वर
     resetAll() {
       const defaults = structuredClone(defaultSettings)
 
@@ -107,6 +128,7 @@ export const useSettingsStore = defineStore('settings', {
       this.persist()
     },
 
+    // Persist helper: store state → localStorage
     persist() {
       const data: SettingsState = {
         institute: this.institute,

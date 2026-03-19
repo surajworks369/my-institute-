@@ -1,5 +1,17 @@
 // src/stores/erpMasterData.ts
 
+/**
+ * `stores/erpMasterData.ts` (ERP Master Data / Constants)
+ *
+ * - **कशासाठी**: ERP मध्ये वापरले जाणारे master lists/labels/constants एका जागी ठेवणे.
+ * - **Project मधली role**: Stores/Views मध्ये dropdown options, seed data आणि default values साठी source.
+ * - **Logic प्रकार**: constants + helper builders (batch seeds, receipt numbers, defaults).
+ * - **File प्रकार**: store-support / constants (frontend)
+ *
+ * Note: सध्या master values hardcoded आहेत. पुढे backend/API आल्यावर ही data
+ * admin-managed master tables मधून येऊ शकते.
+ */
+
 export const MASTER_COURSE_NAMES = [
   'Full Stack Development',
   'Data Science',
@@ -272,6 +284,7 @@ export function buildPaymentReceiptNumber(feeId: number, installmentId: number) 
   return `${MASTER_PAYMENT_RECEIPT_PREFIX}-${String(feeId).padStart(5, '0')}-${String(installmentId).padStart(3, '0')}`
 }
 
+// UI/report helpers: key normalize करून readable label देतो
 export function getReportCategoryLabel(key: string) {
   const normalized = key.trim().toLowerCase()
 
@@ -284,6 +297,7 @@ export function getReportCategoryLabel(key: string) {
   return 'Summary'
 }
 
+// Default picks (UI initialize साठी)
 export function getDefaultExportFormat() {
   return MASTER_EXPORT_FORMATS[0]
 }

@@ -1,4 +1,17 @@
-// src/stores/staffStore.ts
+/**
+ * `stores/staffStore.ts` (Staff Store / Pinia)
+ *
+ * - **कशासाठी**: Staff records (list + CRUD) आणि staff related dropdown options manage करणे.
+ * - **Project मधली role**: Staff pages + dashboard ला staff counts (active/on-leave) आणि summary data मिळतो.
+ * - **Logic प्रकार**:
+ *   - localStorage persistence (`STORAGE_KEY`)
+ *   - seed staff generation (demo dataset)
+ *   - normalize: stored fields safe करणे (role/status/gender)
+ * - **File प्रकार**: store (frontend / Pinia)
+ *
+ * Note: सध्या staff master data frontend/localStorage मध्ये आहे. पुढे backend/API आल्यावर
+ * unique staffCode/email validation server-side enforce होईल.
+ */
 
 import { defineStore } from 'pinia'
 import type {
@@ -16,12 +29,15 @@ import {
   MASTER_EMPLOYMENT_STATUSES,
 } from '@/stores/erpMasterData'
 
+// localStorage key: staff persistence साठी
 const STORAGE_KEY = 'vbh_erp_staff_v3'
 
+// Timestamp helper
 function nowISO(): string {
   return new Date().toISOString()
 }
 
+// localStorage → staff load
 function loadFromStorage(): Staff[] {
   try {
     const raw = localStorage.getItem(STORAGE_KEY)
@@ -33,10 +49,12 @@ function loadFromStorage(): Staff[] {
   }
 }
 
+// staff persist
 function saveToStorage(items: Staff[]): void {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(items))
 }
 
+// Dropdown options (forms/filters साठी)
 export const staffRoleOptions: StaffRole[] = [
   'Admin',
   'Teacher',
@@ -108,6 +126,7 @@ const seedAddresses = [
   'Near Railway Station',
 ] as const
 
+// Normalize helpers: unknown value आल्यास default घ्या
 function normalizeRole(role: unknown): StaffRole {
   return staffRoleOptions.includes(role as StaffRole) ? (role as StaffRole) : 'Teacher'
 }
@@ -120,6 +139,7 @@ function normalizeGender(gender: unknown): Gender {
   return genderOptions.includes(gender as Gender) ? (gender as Gender) : 'Male'
 }
 
+// Seed helpers
 function staffCodeFromIndex(index: number): string {
   return `STF-${String(1001 + index).padStart(4, '0')}`
 }
@@ -133,6 +153,7 @@ function createPhone(index: number): string {
   return `98${String(10000000 + index).slice(0, 8)}`
 }
 
+// Seed/demo staff records
 function seedData(count = 21): Staff[] {
   const base = nowISO()
 
@@ -169,6 +190,7 @@ function seedData(count = 21): Staff[] {
   })
 }
 
+// Storage normalize: types/strings safe करणे + mandatory fields check
 function normalizeItems(items: Staff[]): Staff[] {
   return items
     .map(
@@ -222,6 +244,7 @@ export const useStaffStore = defineStore('staff', {
   },
 
   actions: {
+    // Init: localStorage/seed load
     init(force = false): void {
       if (this.loaded && !force) return
 
@@ -231,6 +254,7 @@ export const useStaffStore = defineStore('staff', {
       saveToStorage(this.items)
     },
 
+    // CRUD: create staff
     create(payload: StaffCreateInput): Staff {
       const maxId = this.items.reduce((max, item) => Math.max(max, item.id), 0)
       const createdAt = nowISO()
@@ -261,6 +285,7 @@ export const useStaffStore = defineStore('staff', {
       return created
     },
 
+    // CRUD: update staff
     update(id: number, patch: StaffUpdateInput): Staff | null {
       const index = this.items.findIndex((item) => item.id === id)
       if (index === -1) return null
@@ -297,6 +322,7 @@ export const useStaffStore = defineStore('staff', {
       return updated
     },
 
+    // CRUD: delete staff
     remove(id: number): boolean {
       const before = this.items.length
       this.items = this.items.filter((item) => item.id !== id)
@@ -304,6 +330,7 @@ export const useStaffStore = defineStore('staff', {
       return this.items.length !== before
     },
 
+    // CRUD: bulk delete
     removeMany(ids: number[]): Staff[] {
       if (!ids.length) return []
 
@@ -314,6 +341,7 @@ export const useStaffStore = defineStore('staff', {
       return removed
     },
 
+    // Undo/restore: backup records restore (id clash टाळतो)
     restoreMany(records: Staff[]): boolean {
       if (!records.length) return false
 
@@ -326,6 +354,7 @@ export const useStaffStore = defineStore('staff', {
       return true
     },
 
+    // Reset: seed वर परत
     resetToSeed(count = 21): void {
       this.items = seedData(count)
       this.loaded = true

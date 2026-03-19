@@ -1,3 +1,18 @@
+/**
+ * `stores/studentsStore.ts` (Students Store)
+ *
+ * - **कशासाठी**: Students module साठी data (list + CRUD) आणि dropdown options manage करणे.
+ * - **Project मधली role**: Students pages (list/add/edit/view) आणि dashboard ला student data पुरवतो.
+ * - **Logic प्रकार**:
+ *   - localStorage persistence (`STORAGE_KEY`)
+ *   - initial seed data generation (demo dataset)
+ *   - related stores sync (course/batches enrollment counts)
+ * - **File प्रकार**: store (frontend)
+ *
+ * Note: सध्या हा store Pinia नाही (Vue `reactive` वापरतो) आणि data localStorage मध्ये आहे.
+ * पुढे backend/API आल्यावर: load/save API calls, आणि role/permission checks लागू होऊ शकतात.
+ */
+
 import { reactive } from 'vue'
 import type { Student, StudentFormData } from '@/types/student'
 import {
@@ -8,8 +23,10 @@ import {
 import { useCourseStore } from '@/stores/courseStore'
 import { useBatchesStore } from '@/stores/batchesStore'
 
+// localStorage key: students persistence साठी
 const STORAGE_KEY = 'vbh_students_v4'
 
+// Master data (dropdown options) – seed generation मध्ये वापरतो
 const cityList = [...MASTER_CITY_LIST]
 
 const maleStudents = [
@@ -62,6 +79,7 @@ const femaleStudents = [
 
 const otherStudents = ['Anuj Chavan', 'Dhiraj Rumade', 'Ramprasad Bhosale'] as const
 
+// Seed helpers: name → email/phone
 function createEmail(name: string, id: number) {
   return `${name.toLowerCase().replace(/\s+/g, '.')}${id}@vastubhandar.edu`
 }
@@ -70,11 +88,13 @@ function createPhone(id: number) {
   return `9${String(800000000 + id).padStart(9, '0')}`.slice(0, 10)
 }
 
+// Course नुसार default batch name (seed data साठी)
 function getSeedBatchNameByCourse(courseName: string) {
   const seed = buildMasterBatchSeeds().find((batch) => batch.courseName === courseName)
   return seed?.name ?? `${courseName} - Morning`
 }
 
+// Initial demo dataset: app मध्ये data नसल्यास first time seed म्हणून वापरतो
 function createSeedStudents(): Student[] {
   const allStudents: Array<{ name: string; gender: 'Male' | 'Female' | 'Other' }> = [
     ...maleStudents.map((name) => ({ name, gender: 'Male' as const })),
@@ -105,6 +125,7 @@ function createSeedStudents(): Student[] {
   })
 }
 
+// localStorage → students load (fallback: seed)
 function loadStudents(): Student[] {
   try {
     const raw = localStorage.getItem(STORAGE_KEY)
@@ -121,34 +142,41 @@ function loadStudents(): Student[] {
   }
 }
 
+// students list persist
 function saveStudents(students: Student[]) {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(students))
 }
 
+// Store state (reactive): students list
 const state = reactive({
   students: loadStudents() as Student[],
 })
 
 export const useStudentStore = () => {
+  // Related stores: enrollment counts maintain करण्यासाठी
   const courseStore = useCourseStore()
   const batchesStore = useBatchesStore()
 
+  // Init: dependent stores init + derived counts sync
   const init = () => {
     courseStore.init()
     batchesStore.init()
     syncRelatedStores()
   }
 
+  // Student list बदलल्यावर courses/batches मध्ये enrollment re-calc
   const syncRelatedStores = () => {
     courseStore.syncEnrollmentFromStudents(state.students)
     batchesStore.syncEnrollmentFromStudents(state.students)
   }
 
+  // UI dropdown: course options (students form/filter साठी)
   const getCourseOptions = () => {
     courseStore.init()
     return courseStore.courseNames
   }
 
+  // UI dropdown: course निवडल्यानंतर related batch options
   const getBatchOptions = (courseName = '') => {
     batchesStore.init()
     courseStore.init()
@@ -165,6 +193,7 @@ export const useStudentStore = () => {
       .map((batch) => batch.name)
   }
 
+  // CRUD: create student
   const addStudent = (student: StudentFormData) => {
     const maxId = state.students.reduce((max, item) => Math.max(max, item.id), 0)
 
@@ -179,6 +208,7 @@ export const useStudentStore = () => {
     return newStudent
   }
 
+  // CRUD: update student
   const updateStudent = (id: number, updatedData: StudentFormData) => {
     const index = state.students.findIndex((student) => student.id === id)
     if (index === -1) return null
@@ -194,6 +224,7 @@ export const useStudentStore = () => {
     return updatedStudent
   }
 
+  // CRUD: delete single student
   const deleteStudent = (id: number) => {
     const index = state.students.findIndex((student) => student.id === id)
     if (index === -1) return false
@@ -204,6 +235,7 @@ export const useStudentStore = () => {
     return true
   }
 
+  // CRUD: bulk delete (ids list)
   const deleteStudents = (ids: number[]) => {
     if (!ids.length) return []
 
@@ -218,6 +250,7 @@ export const useStudentStore = () => {
     return removedStudents
   }
 
+  // Undo/restore: deleted students restore (ids clash टाळतो)
   const restoreStudents = (studentsToRestore: Student[]) => {
     if (!studentsToRestore.length) return false
 
@@ -233,10 +266,12 @@ export const useStudentStore = () => {
     return true
   }
 
+  // Lookup helper: id ने student मिळवा
   const getStudentById = (id: number) => {
     return state.students.find((student) => student.id === id) ?? null
   }
 
+  // Reset: demo seed वर परत
   const resetStudents = () => {
     const seeded = createSeedStudents()
     state.students.splice(0, state.students.length, ...seeded)

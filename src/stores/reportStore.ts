@@ -1,4 +1,17 @@
-// src/stores/reportStore.ts
+/**
+ * `stores/reportStore.ts` (Reports Store / Pinia - computed reports)
+ *
+ * - **कशासाठी**: Students/Attendance/Exams/Fees यांचे report rows आणि filtering logic तयार करणे.
+ * - **Project मधली role**: Reports pages ला unified report data, filters आणि summary metrics provide करते.
+ * - **Logic प्रकार**:
+ *   - विविध stores मधून data join करून report rows बनवणे
+ *   - search/date/status/paymentMethod based filtering
+ *   - report summary (counts + totals) compute करणे
+ * - **File प्रकार**: store (frontend / Pinia)
+ *
+ * Note: सध्या reports पूर्ण frontend computed आहेत. पुढे backend/API आल्यावर heavy reports
+ * server-side तयार होऊन pagination/export endpoints मधून येऊ शकतात.
+ */
 
 import { computed } from 'vue'
 import { defineStore } from 'pinia'
@@ -18,12 +31,14 @@ import type {
   StudentReportRow,
 } from '@/types/report'
 
+// Date filter helper: from/to range मध्ये आहे का?
 function inDateRange(date: string, fromDate?: string, toDate?: string): boolean {
   if (fromDate && date < fromDate) return false
   if (toDate && date > toDate) return false
   return true
 }
 
+// Search helper: अनेक fields मध्ये query match शोधतो
 function matchesSearch(values: Array<string | number | undefined>, query?: string): boolean {
   if (!query || !query.trim()) return true
   const q = query.trim().toLowerCase()
@@ -35,6 +50,7 @@ function matchesSearch(values: Array<string | number | undefined>, query?: strin
 }
 
 export const useReportStore = defineStore('reports', () => {
+  // Dependent stores: report rows तयार करण्यासाठी source data
   const studentStore = useStudentStore()
   const courseStore = useCourseStore()
   const batchStore = useBatchesStore()
@@ -42,6 +58,7 @@ export const useReportStore = defineStore('reports', () => {
   const examStore = useExamStore()
   const feesStore = useFeesStore()
 
+  // Init: सर्व dependent stores init (localStorage/demo seed load)
   function init() {
     studentStore.init()
     courseStore.init()
@@ -51,6 +68,7 @@ export const useReportStore = defineStore('reports', () => {
     feesStore.init()
   }
 
+  // Base report rows (unfiltered) – UI filters नंतर apply होतात
   const studentReports = computed<StudentReportRow[]>(() => {
     return studentStore.students.map((student) => {
       const course = courseStore.getCourseByName(student.course)
@@ -191,6 +209,7 @@ export const useReportStore = defineStore('reports', () => {
     })
   })
 
+  // Filters: Students report
   function filterStudentReports(filters: ReportFilters): StudentReportRow[] {
     return studentReports.value.filter((row) => {
       if (filters.batchId && row.batchId !== filters.batchId) return false
@@ -215,6 +234,7 @@ export const useReportStore = defineStore('reports', () => {
     })
   }
 
+  // Filters: Attendance report
   function filterAttendanceReports(filters: ReportFilters): AttendanceReportRow[] {
     return attendanceReports.value.filter((row) => {
       if (filters.batchId && row.batchId !== filters.batchId) return false
@@ -244,6 +264,7 @@ export const useReportStore = defineStore('reports', () => {
     })
   }
 
+  // Filters: Exam report
   function filterExamReports(filters: ReportFilters): ExamReportRow[] {
     return examReports.value.filter((row) => {
       if (filters.batchId && row.batchId !== filters.batchId) return false
@@ -277,6 +298,7 @@ export const useReportStore = defineStore('reports', () => {
     })
   }
 
+  // Filters: Fees report
   function filterFeesReports(filters: ReportFilters): FeesReportRow[] {
     return feesReports.value.filter((row) => {
       if (filters.batchId && row.batchId !== filters.batchId) return false
@@ -305,6 +327,7 @@ export const useReportStore = defineStore('reports', () => {
     })
   }
 
+  // Summary widget: reports dashboard वर quick overview
   const summary = computed<ReportSummary>(() => {
     const totalStudents = studentReports.value.length
     const activeStudents = studentReports.value.filter((x) => x.status === 'Active').length
@@ -359,12 +382,14 @@ export const useReportStore = defineStore('reports', () => {
     }
   })
 
+  // Filters dropdown options (UI साठी)
   const studentStatuses = computed(() => ['Active', 'Inactive'])
   const attendanceStatuses = computed(() => ['Present', 'Absent', 'Late', 'Leave'])
   const examStatuses = computed(() => ['Pass', 'Fail'])
   const feeStatuses = computed(() => ['Paid', 'Partial', 'Pending', 'Overdue'])
   const paymentMethods = computed<PaymentMethod[]>(() => ['Cash', 'UPI', 'Card', 'Bank Transfer'])
 
+  // Dropdown data: batches/courses/exams list (id+name)
   const batches = computed(() =>
     batchStore.batches.map((batch) => ({
       id: batch.id,

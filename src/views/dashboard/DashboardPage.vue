@@ -1,4 +1,5 @@
 <template>
+  <!-- Dashboard root: सर्व summary cards, charts आणि quick actions इथे आहेत -->
   <div class="dashboard-page fade-in">
     <!-- Hero -->
     <section class="hero-card">
@@ -28,7 +29,7 @@
       </div>
     </section>
 
-    <!-- Filters -->
+    <!-- Filters: course/batch/session/date आणि quick-status नुसार संपूर्ण dashboard data filter -->
     <section class="panel card filter-panel">
       <div class="section-top compact-top">
         <div class="title-block">
@@ -95,7 +96,7 @@
       </div>
     </section>
 
-    <!-- Main Stat Cards -->
+    <!-- Main Stat Cards: students/courses/batches/staff/attendance/exams/fees यांचे high-level numbers -->
     <section class="stats-grid dashboard-stats-grid">
       <div class="stat-card stat-card-total">
         <div class="stat-icon">👨‍🎓</div>
@@ -170,7 +171,7 @@
       </div>
     </section>
 
-    <!-- Insight Cards -->
+    <!-- Insight Cards: students, attendance, exams, fees, staff यांचे breakdown visuals -->
     <section class="insight-grid">
       <div class="panel card insight-card">
         <div class="panel-head">
@@ -290,7 +291,7 @@
       </div>
     </section>
 
-    <!-- Charts -->
+    <!-- Charts: admissions, fees, attendance distribution, exam results, course-wise students -->
     <section class="chart-grid">
       <div class="panel card">
         <div class="panel-head">
@@ -403,7 +404,7 @@
       </div>
     </section>
 
-    <!-- Quick Actions -->
+    <!-- Quick Actions: महत्वाच्या CRUD screens कडे जलद navigation buttons -->
     <section class="panel card">
       <div class="panel-head">
         <div>
@@ -471,7 +472,7 @@
       </div>
     </section>
 
-    <!-- Alerts -->
+    <!-- Alerts: overdue fees, low attendance, upcoming exams, staff leave साठी warning cards -->
     <section class="alert-grid">
       <div class="alert-card overdue-alert">
         <div class="alert-icon">💸</div>
@@ -506,7 +507,7 @@
       </div>
     </section>
 
-    <!-- Tables -->
+    <!-- Tables: recent students/exams/payments/pending fees/low attendance यांचे छोटे lists -->
     <section class="widget-grid">
       <div class="panel card widget-card">
         <div class="widget-head">
@@ -686,6 +687,21 @@
 </template>
 
 <script setup lang="ts">
+/**
+ * `views/dashboard/DashboardPage.vue` (ERP Dashboard)
+ *
+ * - **कशासाठी**: पूर्ण ERP मधील मुख्य माहिती (students, courses, batches, attendance, exams, fees, staff) एका page वर summarize करणे.
+ * - **Project मधली role**: Login नंतरचा default landing page (`/dashboard`) – इथून सर्व modules कडे quick insights आणि navigation मिळते.
+ * - **Logic प्रकार**:
+ *   - वेगवेगळ्या Pinia stores मधून data वाचणे
+ *   - filters (course/batch/session/date/status) apply करून computed metrics तयार करणे
+ *   - charts, distributions, alert cards आणि tables साठी aggregate data तयार करणे
+ * - **File प्रकार**: view (frontend analytics/dashboard)
+ *
+ * Note: सध्या सर्व calculations frontend मध्ये Pinia state वर होत आहेत.
+ * भविष्यात मोठा data असेल तर हे काही aggregates backend/API reports मधून येऊ शकतात.
+ */
+
 import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useStudentStore } from '@/stores/studentsStore'
@@ -766,6 +782,7 @@ type StaffLike = {
 
 const router = useRouter()
 
+// Stores: सर्व modules कडचा raw data (students/courses/batches/attendance/exams/fees/staff)
 const studentStore = useStudentStore()
 const courseStore = useCourseStore()
 const batchesStore = useBatchesStore()
@@ -774,6 +791,7 @@ const examStore = useExamStore()
 const feesStore = useFeesStore()
 const staffStore = useStaffStore()
 
+// Filter controls (toolbar मधील selects/inputs)
 const courseFilter = ref('')
 const batchFilter = ref('')
 const academicSessionFilter = ref('')
@@ -781,8 +799,10 @@ const quickStatusFilter = ref<QuickStatusFilter>('All')
 const dateFrom = ref('')
 const dateTo = ref('')
 
+// Master academic sessions (उदा. "2024-25") – erpMasterData मधून
 const academicSessions = [...MASTER_ACADEMIC_SESSIONS]
 
+// Page mount: सर्व संबंधित stores initialize (localStorage / API मधून data load)
 onMounted(() => {
   studentStore.init()
   courseStore.init()
@@ -793,6 +813,7 @@ onMounted(() => {
   staffStore.init()
 })
 
+// Base collections: stores मधून shallow copy करून type cast
 const students = computed<StudentLike[]>(() => [...studentStore.students] as StudentLike[])
 const courses = computed<CourseLike[]>(() => [...courseStore.courses] as CourseLike[])
 const batches = computed<BatchLike[]>(() => [...batchesStore.batches] as BatchLike[])
@@ -807,11 +828,13 @@ const staffItems = computed<StaffLike[]>(() => [...staffStore.items] as StaffLik
 const courseOptions = computed(() => courseStore.courseNames)
 const batchOptions = computed(() => batchesStore.batchNames)
 
+// Date helper: value ला YYYY-MM-DD normalize करणे (range compare साठी)
 const normalizeYmd = (value: string) => {
   if (!value) return ''
   return new Date(value).toISOString().slice(0, 10)
 }
 
+// Filters मधील Date From/To सोबत value compare करण्यासाठी helper
 const matchesDateRange = (value: string) => {
   if (!value && !dateFrom.value && !dateTo.value) return true
   if (!value) return false
@@ -822,6 +845,7 @@ const matchesDateRange = (value: string) => {
   return true
 }
 
+// Academic session filter (उदा. "2024-25") साठी helper
 const matchesSession = (value: string) => {
   if (!academicSessionFilter.value) return true
   if (!value) return false
@@ -831,6 +855,7 @@ const matchesSession = (value: string) => {
   return session === academicSessionFilter.value
 }
 
+// Toolbar filters + quickStatus वर आधारित students filtered list
 const filteredStudents = computed(() => {
   return students.value.filter((student) => {
     const courseOk = !courseFilter.value || student.course === courseFilter.value
@@ -845,6 +870,7 @@ const filteredStudents = computed(() => {
   })
 })
 
+// Filters नुसार courseIds set (attendance/exams साठी वापरतो)
 const filteredCourseIds = computed(() => {
   if (!courseFilter.value) return new Set(courses.value.map((course) => course.id))
   return new Set(
@@ -852,6 +878,7 @@ const filteredCourseIds = computed(() => {
   )
 })
 
+// Filters नुसार batchIds set
 const filteredBatchIds = computed(() => {
   if (!batchFilter.value) return new Set(batches.value.map((batch) => batch.id))
   return new Set(
@@ -859,6 +886,7 @@ const filteredBatchIds = computed(() => {
   )
 })
 
+// Attendance items वर course/batch/date filters apply
 const filteredAttendanceItems = computed(() => {
   return attendanceItems.value.filter((item) => {
     const courseOk = filteredCourseIds.value.has(item.courseId)
@@ -868,6 +896,7 @@ const filteredAttendanceItems = computed(() => {
   })
 })
 
+// Exams वर course/batch/date + quickStatus ('Upcoming') filters apply
 const filteredExams = computed(() => {
   return exams.value.filter((exam) => {
     const courseOk = filteredCourseIds.value.has(exam.courseId)
@@ -882,10 +911,12 @@ const filteredExams = computed(() => {
 
 const filteredExamIds = computed(() => new Set(filteredExams.value.map((exam) => exam.id)))
 
+// Filter केलेल्या exams साठी marks filter (Pass/Fail stats साठी)
 const filteredExamMarks = computed(() => {
   return examMarks.value.filter((mark) => filteredExamIds.value.has(mark.examId))
 })
 
+// Fees वर filters + student status + quickStatus ('Overdue') apply
 const filteredFees = computed(() => {
   return fees.value.filter((fee) => {
     const student = students.value.find((item) => item.id === fee.studentId)
@@ -903,6 +934,7 @@ const filteredFees = computed(() => {
   })
 })
 
+// मुख्य counts: students/courses/batches/staff
 const totalStudents = computed(() => filteredStudents.value.length)
 const activeStudents = computed(
   () => filteredStudents.value.filter((student) => student.status === 'Active').length,
@@ -972,6 +1004,7 @@ const passPercentage = computed(() => {
   return Math.round((passCount.value / total) * 100)
 })
 
+// Fees summary: collected / pending / counts (Paid/Partial/Pending/Overdue)
 const totalCollected = computed(() =>
   filteredFees.value.reduce((sum, item) => sum + Number(item.paidAmount || 0), 0),
 )
@@ -1001,6 +1034,7 @@ const studentInactivePercent = computed(() => {
   return Math.round((inactiveStudents.value / totalStudents.value) * 100)
 })
 
+// Charts साठी derived data: monthly admissions
 const monthlyAdmissions = computed(() => {
   const monthLabels = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun']
   const monthMap = new Map(monthLabels.map((label) => [label, 0]))
@@ -1024,6 +1058,7 @@ const maxMonthlyAdmissions = computed(() => {
   return Math.max(...values, 1)
 })
 
+// Charts साठी derived data: monthly fees collection
 const monthlyFeesCollection = computed(() => {
   const monthLabels = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun']
   const monthMap = new Map(monthLabels.map((label) => [label, 0]))
@@ -1047,6 +1082,7 @@ const maxMonthlyFeesCollection = computed(() => {
   return Math.max(...values, 1)
 })
 
+// Distribution cards साठी attendance summary (Present/Absent/Late/Leave)
 const attendanceDistribution = computed(() => {
   const total = filteredAttendanceItems.value.length || 1
 
@@ -1070,6 +1106,7 @@ const attendanceDistribution = computed(() => {
   ]
 })
 
+// Distribution cards साठी exam result summary (Pass/Fail)
 const examResultDistribution = computed(() => {
   const total = passCount.value + failCount.value || 1
 
@@ -1079,6 +1116,7 @@ const examResultDistribution = computed(() => {
   ]
 })
 
+// Course-wise top students count (bar chart)
 const topCourseWiseStudents = computed(() => {
   const counts = filteredStudents.value.reduce<Record<string, number>>((acc, student) => {
     acc[student.course] = (acc[student.course] ?? 0) + 1
@@ -1098,18 +1136,21 @@ const topCourseWiseStudents = computed(() => {
   }))
 })
 
+// Tables साठी recent students (नुकतेच admitted झालेले)
 const recentStudents = computed(() => {
   return [...filteredStudents.value]
     .sort((a, b) => new Date(b.admissionDate).getTime() - new Date(a.admissionDate).getTime())
     .slice(0, 5)
 })
 
+// Tables साठी आगामी exams (exam date ascending)
 const upcomingExamRows = computed(() => {
   return [...filteredUpcomingExams.value]
     .sort((a, b) => new Date(a.examDate).getTime() - new Date(b.examDate).getTime())
     .slice(0, 5)
 })
 
+// Tables साठी recent payments (latest अपडेट/creation वर sort)
 const recentPayments = computed(() => {
   return [...filteredFees.value]
     .filter((item) => Number(item.paidAmount) > 0)
@@ -1127,6 +1168,7 @@ const recentPayments = computed(() => {
     }))
 })
 
+// Tables साठी सर्वात जास्त pending असलेले top fees records
 const pendingFeeRows = computed(() => {
   return [...filteredFees.value]
     .filter((item) => Number(item.pendingAmount) > 0)
@@ -1138,6 +1180,7 @@ const pendingFeeRows = computed(() => {
     }))
 })
 
+// Low attendance students शोधण्यासाठी helper summary
 const lowAttendanceStudents = computed(() => {
   const grouped = new Map<number, { total: number; present: number }>()
 
@@ -1168,10 +1211,12 @@ const lowAttendanceStudents = computed(() => {
 
 const lowAttendanceRows = computed(() => lowAttendanceStudents.value.slice(0, 5))
 
+// Helper: studentId वरून friendly नाव (table rows साठी)
 function getStudentName(studentId: number) {
   return students.value.find((student) => student.id === studentId)?.name ?? `Student #${studentId}`
 }
 
+// Helper: currency format (INR – dashboard मध्ये सगळीकडे consistent)
 function formatCurrency(value: number) {
   return new Intl.NumberFormat('en-IN', {
     style: 'currency',
@@ -1180,26 +1225,31 @@ function formatCurrency(value: number) {
   }).format(value || 0)
 }
 
+// Helper: मोठ्या amounts साठी short display (उदा. 1.2L / 12K)
 function compactCurrency(value: number) {
   if (value >= 100000) return `${(value / 100000).toFixed(1)}L`
   if (value >= 1000) return `${Math.round(value / 1000)}K`
   return `${Math.round(value)}`
 }
 
+// Helper: तारीख human readable दाखवणे
 function formatDate(value: string) {
   if (!value) return '-'
   return new Date(value).toLocaleDateString('en-GB')
 }
 
+// Helper: mini bar charts साठी relative height (किमान visible bar ठेवतो)
 function getBarHeight(value: number, max: number) {
   if (!max) return 8
   return Math.max(Math.round((value / max) * 100), value > 0 ? 10 : 6)
 }
 
+// Navigation helper: quick action buttons आणि "View All" बटणांसाठी
 function goTo(path: string) {
   router.push(path)
 }
 
+// Filters reset: सर्व filter controls default वर
 function resetFilters() {
   courseFilter.value = ''
   batchFilter.value = ''

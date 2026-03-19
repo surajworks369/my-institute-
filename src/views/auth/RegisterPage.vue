@@ -1,11 +1,14 @@
 <template>
+  <!-- Register page: auth layout मधल्या right panel मध्ये दिसणारा form -->
   <div class="center-page">
     <div class="auth-card fade-in">
+      <!-- Page heading / guidance -->
       <div class="card-head">
         <h2>Create Account</h2>
         <p>Create your ERP account and start managing your institute smartly.</p>
       </div>
 
+      <!-- Register form submit: store register + redirect -->
       <form class="auth-form" @submit.prevent="handleRegister">
         <div class="form-group">
           <label class="form-label" for="register-name">Full Name</label>
@@ -43,6 +46,7 @@
         <button type="submit" class="submit-btn">Register</button>
       </form>
 
+      <!-- Login navigation link -->
       <p class="bottom-text">
         Already have an account?
         <router-link class="auth-link" to="/auth/login">Login</router-link>
@@ -52,17 +56,32 @@
 </template>
 
 <script setup lang="ts">
+/**
+ * `views/auth/RegisterPage.vue` (Register Page)
+ *
+ * - **कशासाठी**: नवीन account create करण्यासाठी form देणे.
+ * - **Project मधली role**: `/auth/register` route वरून register flow handle होतो.
+ * - **Logic प्रकार**: form state (refs) + submit handler + authStore register + router navigation.
+ * - **File प्रकार**: view (frontend)
+ *
+ * Note: सध्या register localStorage-demo users मध्ये save होतं; पुढे backend/API call ने replace होईल.
+ */
+
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/authStore'
 
+// Navigation
 const router = useRouter()
+// Auth store: register + session state
 const authStore = useAuthStore()
 
+// Form state
 const name = ref<string>('')
 const email = ref<string>('')
 const password = ref<string>('')
 
+// Form submit handler: basic validation + register + dashboard redirect
 const handleRegister = (): void => {
   if (!name.value || !email.value || !password.value) {
     alert('Please fill all fields')
@@ -76,6 +95,7 @@ const handleRegister = (): void => {
     role: 'admin',
   })
 
+  // Register नंतर main app area कडे
   router.push('/dashboard')
 }
 </script>

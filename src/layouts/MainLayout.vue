@@ -1,35 +1,51 @@
 <template>
+  <!-- Main app shell: sidebar + navbar + content area + footer -->
   <div class="layout-shell">
+    <!-- Sidebar: desktop वर visible, mobile वर toggle -->
     <Sidebar
       :mobile-open="mobileSidebarOpen"
       @close-mobile="closeMobileSidebar"
       @toggle-mobile="toggleMobileSidebar"
     />
 
+    <!-- Mobile overlay: sidebar open असताना outside click ने close -->
     <div v-if="mobileSidebarOpen" class="mobile-overlay" @click="closeMobileSidebar"></div>
 
     <div class="main-shell">
+      <!-- Mobile topbar: menu button + current section title -->
       <div class="mobile-topbar">
         <button class="mobile-menu-btn" type="button" @click="toggleMobileSidebar">☰</button>
         <div class="mobile-title">{{ mobilePageTitle }}</div>
       </div>
 
+      <!-- Desktop navbar -->
       <div class="desktop-navbar">
         <Navbar />
       </div>
 
+      <!-- Scrollable content area: route pages इथे render होतात -->
       <main ref="contentShellRef" class="content-shell">
         <div class="content-inner">
           <router-view />
         </div>
       </main>
 
+      <!-- Footer -->
       <Footer />
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
+/**
+ * `layouts/MainLayout.vue` (Main Layout)
+ *
+ * - **कशासाठी**: Login नंतरच्या मुख्य app area साठी common layout provide करणे.
+ * - **Project मधली role**: Sidebar/Nav/Footer आणि `<router-view />` content outlet ची frame.
+ * - **Logic प्रकार**: Responsive sidebar (mobile), route change वर scroll reset, mobile title mapping.
+ * - **File प्रकार**: layout (frontend)
+ */
+
 import { ref, watch, nextTick, onMounted, onBeforeUnmount, computed } from 'vue'
 import { useRoute } from 'vue-router'
 import Sidebar from '../components/layout/SidebarLayout.vue'
@@ -41,6 +57,7 @@ const contentShellRef = ref<HTMLElement | null>(null)
 const mobileSidebarOpen = ref(false)
 const isMobile = ref(false)
 
+// Mobile topbar title: route path वरून current section title ठरवतो
 const mobilePageTitle = computed(() => {
   const path = route.path
 
@@ -58,6 +75,7 @@ const mobilePageTitle = computed(() => {
   return 'Institute ERP'
 })
 
+// Responsive breakpoint check: desktop झाल्यावर mobile sidebar forced close
 const checkMobile = () => {
   isMobile.value = window.innerWidth <= 1024
 
@@ -66,16 +84,19 @@ const checkMobile = () => {
   }
 }
 
+// Mobile-only: sidebar toggle
 const toggleMobileSidebar = () => {
   if (isMobile.value) {
     mobileSidebarOpen.value = !mobileSidebarOpen.value
   }
 }
 
+// Sidebar close helper (overlay click / child event)
 const closeMobileSidebar = () => {
   mobileSidebarOpen.value = false
 }
 
+// Route change flow: mobile sidebar close + content scroll reset
 watch(
   () => route.fullPath,
   async () => {
@@ -96,11 +117,13 @@ watch(
   { immediate: true },
 )
 
+// Mount: initial breakpoint check + resize listener
 onMounted(() => {
   checkMobile()
   window.addEventListener('resize', checkMobile)
 })
 
+// Cleanup: resize listener remove
 onBeforeUnmount(() => {
   window.removeEventListener('resize', checkMobile)
 })

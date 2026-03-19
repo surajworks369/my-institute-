@@ -1,4 +1,19 @@
-// src/stores/examStore.ts
+/**
+ * `stores/examStore.ts` (Exams + Marks Store / Pinia)
+ *
+ * - **कशासाठी**: Exams schedule आणि exam marks entries (pass/fail) manage करणे.
+ * - **Project मधली role**: Exams pages + dashboard/reports ला exams/marks data आणि counts provide करतो.
+ * - **Logic प्रकार**:
+ *   - localStorage persistence (`STORAGE_KEY`) – exams + marks एकत्र save
+ *   - normalize: batch/course/student linkage validate
+ *   - seed exams + marks generation (demo)
+ *   - create/update वेळी duplicate mark entry (examId+studentId) टाळणे
+ * - **File प्रकार**: store (frontend / Pinia)
+ *
+ * Note: सध्या validation frontend वर आहे. पुढे backend/API आल्यावर:
+ * - exam schedules आणि marks server-side manage होतील
+ * - pass/fail आणि marks clamp/validation backend वर enforce होऊ शकते
+ */
 
 import { defineStore } from 'pinia'
 import type {
@@ -23,6 +38,7 @@ import { useCourseStore } from '@/stores/courseStore'
 import { useStudentStore } from '@/stores/studentsStore'
 import type { Student } from '@/types/student'
 
+// localStorage key: exams + marks persistence साठी
 const STORAGE_KEY = 'vbh_erp_exams_v3'
 
 type StorageShape = {
@@ -62,6 +78,7 @@ function safeParseStorage(): StorageShape {
   }
 }
 
+// exams + marks एकत्र persist करतो
 function saveStorage(exams: Exam[], marks: ExamMark[]): void {
   const payload: StorageShape = { exams, marks }
   localStorage.setItem(STORAGE_KEY, JSON.stringify(payload))
@@ -109,6 +126,7 @@ export const useExamStore = defineStore('exams', {
   },
 
   actions: {
+    // Init: related stores init + storage normalize/seed
     init(force = false): void {
       if (this.loaded && !force) return
 
@@ -136,6 +154,7 @@ export const useExamStore = defineStore('exams', {
       saveStorage(this.exams, this.marks)
     },
 
+    // Storage normalize: batch/course existence validate + marks constraints fix
     normalizeExams(exams: Exam[]): Exam[] {
       const batchStore = useBatchesStore()
       const courseStore = useCourseStore()
@@ -171,6 +190,7 @@ export const useExamStore = defineStore('exams', {
         .filter((item): item is Exam => Boolean(item))
     },
 
+    // Storage normalize: marks मध्ये student/exam link validate + duplicates drop
     normalizeMarks(marks: ExamMark[], exams: Exam[]): ExamMark[] {
       const examMap = new Map(exams.map((exam) => [exam.id, exam]))
       const studentStore = useStudentStore()
@@ -207,6 +227,7 @@ export const useExamStore = defineStore('exams', {
       return result.filter((item) => item.id > 0)
     },
 
+    // Exam form linkage helper: batchId आणि courseId match आहेत का?
     resolveExamLink(courseId: number, batchId: number) {
       const batchStore = useBatchesStore()
       const courseStore = useCourseStore()
@@ -230,11 +251,13 @@ export const useExamStore = defineStore('exams', {
       return { batch, course }
     },
 
+    // Exam create/update validate
     validateExamLink(courseId: number, batchId: number): boolean {
       const { batch, course } = this.resolveExamLink(courseId, batchId)
       return Boolean(batch && course)
     },
 
+    // Student हा exam च्या course+batch शी link आहे का ते validate
     isStudentLinkedToExam(student: Student, exam: Exam): boolean {
       const batchStore = useBatchesStore()
       const courseStore = useCourseStore()
@@ -249,6 +272,7 @@ export const useExamStore = defineStore('exams', {
       return true
     },
 
+    // Marks create/update validate: examId+studentId link check
     validateMarkLink(examId: number, studentId: number): boolean {
       const exam = this.exams.find((e) => e.id === examId) ?? null
       if (!exam) return false
@@ -260,6 +284,7 @@ export const useExamStore = defineStore('exams', {
       return this.isStudentLinkedToExam(student, exam)
     },
 
+    // Seed/demo exams list
     seedExams(count = 21): Exam[] {
       const batchStore = useBatchesStore()
       const courseStore = useCourseStore()
@@ -307,6 +332,7 @@ export const useExamStore = defineStore('exams', {
       })
     },
 
+    // Seed/demo marks: exams + linked students वरून काही marks तयार करतो
     seedMarksForExams(exams: Exam[], count = 21): ExamMark[] {
       const studentStore = useStudentStore()
       const base = nowISO()
@@ -368,6 +394,7 @@ export const useExamStore = defineStore('exams', {
       return result
     },
 
+    // CRUD: create exam
     createExam(payload: ExamCreateInput): Exam | null {
       if (!this.validateExamLink(Number(payload.courseId), Number(payload.batchId))) return null
 
@@ -394,6 +421,7 @@ export const useExamStore = defineStore('exams', {
       return created
     },
 
+    // CRUD: update exam + linked marks re-validate/recompute
     updateExam(id: number, patch: ExamUpdateInput): Exam | null {
       const index = this.exams.findIndex((e) => e.id === id)
       if (index === -1) return null
@@ -457,6 +485,7 @@ export const useExamStore = defineStore('exams', {
       return updated
     },
 
+    // CRUD: delete exam (marks पण delete)
     removeExam(id: number): boolean {
       const before = this.exams.length
       this.exams = this.exams.filter((e) => e.id !== id)
@@ -465,10 +494,12 @@ export const useExamStore = defineStore('exams', {
       return this.exams.length !== before
     },
 
+    // Status helper
     setExamStatus(id: number, status: ExamStatus): void {
       this.updateExam(id, { status })
     },
 
+    // CRUD: create mark entry (duplicate examId+studentId टाळतो)
     createMark(payload: ExamMarkCreateInput): ExamMark | null {
       const exam = this.exams.find((e) => e.id === payload.examId) ?? null
       if (!exam) return null
@@ -496,6 +527,7 @@ export const useExamStore = defineStore('exams', {
       return created
     },
 
+    // CRUD: update mark entry (link + duplicates validate)
     updateMark(id: number, patch: ExamMarkUpdateInput): ExamMark | null {
       const index = this.marks.findIndex((m) => m.id === id)
       if (index === -1) return null
@@ -545,6 +577,7 @@ export const useExamStore = defineStore('exams', {
       return updated
     },
 
+    // CRUD: delete mark
     removeMark(id: number): boolean {
       const before = this.marks.length
       this.marks = this.marks.filter((m) => m.id !== id)
@@ -552,6 +585,7 @@ export const useExamStore = defineStore('exams', {
       return this.marks.length !== before
     },
 
+    // Reset: seed वर परत
     resetToSeed(count = 21): void {
       this.exams = this.seedExams(count)
       this.marks = this.seedMarksForExams(this.exams, count)

@@ -1,4 +1,19 @@
-// src/stores/feesStore.ts
+/**
+ * `stores/feesStore.ts` (Fees Store / Pinia - setup style)
+ *
+ * - **कशासाठी**: Student fee records, installments आणि fee status (Paid/Partial/Pending/Overdue) manage करणे.
+ * - **Project मधली role**: Fees pages + dashboard ला fee totals, pending/overdue alerts, recent payments data देतो.
+ * - **Logic प्रकार**:
+ *   - localStorage persistence (`STORAGE_KEY`)
+ *   - seed fees generation (demo data)
+ *   - paid/pending/status calculations
+ *   - installments add केल्यावर totals/status recompute
+ * - **File प्रकार**: store (frontend / Pinia)
+ *
+ * Note: सध्या fees workflow localStorage मध्ये simulate केला आहे. पुढे backend/API आल्यावर:
+ * - receipt number generation, payment capture, due/overdue logic server-side होऊ शकते
+ * - data size वाढल्यावर aggregates backend reports मधून येतील
+ */
 
 import { computed, ref } from 'vue'
 import { defineStore } from 'pinia'
@@ -7,8 +22,10 @@ import { useCourseStore } from '@/stores/courseStore'
 import { useBatchesStore } from '@/stores/batchesStore'
 import type { Fee, FeeFormInput, FeeInstallment, FeeStatus, PaymentMethod } from '@/types/fee'
 
+// localStorage key: fees persistence साठी
 const STORAGE_KEY = 'vbh_fees_v2'
 
+// Timestamp/date helpers
 function nowISO() {
   return new Date().toISOString()
 }
@@ -23,6 +40,7 @@ function addDaysYMD(days: number) {
   return date.toISOString().slice(0, 10)
 }
 
+// localStorage → fees load
 function loadFromStorage(): Fee[] {
   try {
     const raw = localStorage.getItem(STORAGE_KEY)
@@ -34,10 +52,12 @@ function loadFromStorage(): Fee[] {
   }
 }
 
+// fees persist
 function saveToStorage(items: Fee[]) {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(items))
 }
 
+// Amount helpers: pending आणि status calculations
 function calculatePending(totalFees: number, paidAmount: number) {
   return Math.max(Number(totalFees || 0) - Number(paidAmount || 0), 0)
 }
@@ -56,6 +76,7 @@ function calculateStatus(totalFees: number, paidAmount: number, dueDate: string)
   return 'Pending'
 }
 
+// Receipt helpers: UI/print/export साठी unique-ish numbers
 function generateReceiptNo(id: number) {
   return `VBH-FEE-${String(id).padStart(5, '0')}`
 }
@@ -64,6 +85,7 @@ function createInstallmentReceiptNo(feeId: number, installmentId: number) {
   return `VBH-PAY-${String(feeId).padStart(5, '0')}-${String(installmentId).padStart(3, '0')}`
 }
 
+// Seed/demo: students/courses/batches linkage वापरून काही fee records तयार करतो
 function buildSeedFees(): Fee[] {
   const studentStore = useStudentStore()
   const courseStore = useCourseStore()
@@ -134,6 +156,7 @@ function buildSeedFees(): Fee[] {
   })
 }
 
+// Storage normalize: numbers/date fields safe करणे + status recompute
 function normalizeFees(stored: Fee[]): Fee[] {
   return stored
     .map((item, index) => {
@@ -168,6 +191,7 @@ export const useFeesStore = defineStore('fees', () => {
   const fees = ref<Fee[]>([])
   const loaded = ref(false)
 
+  // Init: related stores init + stored/seed fees load
   function init(force = false) {
     if (loaded.value && !force) return
 
@@ -187,18 +211,22 @@ export const useFeesStore = defineStore('fees', () => {
     saveToStorage(fees.value)
   }
 
+  // Next id (local list वरून)
   function nextId() {
     return fees.value.reduce((max, item) => Math.max(max, item.id), 0) + 1
   }
 
+  // Lookup helper
   function getFeeById(id: number) {
     return fees.value.find((item) => item.id === id) ?? null
   }
 
+  // Student-wise fees list
   function feesByStudent(studentId: number) {
     return fees.value.filter((item) => item.studentId === studentId)
   }
 
+  // CRUD: create fee record (optional initial installment)
   function addFee(payload: FeeFormInput) {
     const id = nextId()
     const totalFees = Number(payload.totalFees || 0)
@@ -243,6 +271,7 @@ export const useFeesStore = defineStore('fees', () => {
     return created
   }
 
+  // CRUD: update fee record (status recompute)
   function updateFee(id: number, payload: FeeFormInput) {
     const index = fees.value.findIndex((item) => item.id === id)
     if (index === -1) return null
@@ -278,6 +307,7 @@ export const useFeesStore = defineStore('fees', () => {
     return updated
   }
 
+  // CRUD: delete single fee record
   function deleteFee(id: number) {
     const index = fees.value.findIndex((item) => item.id === id)
     if (index === -1) return false
@@ -287,6 +317,7 @@ export const useFeesStore = defineStore('fees', () => {
     return true
   }
 
+  // CRUD: bulk delete
   function removeMany(ids: number[]) {
     if (!ids.length) return []
 
@@ -299,6 +330,7 @@ export const useFeesStore = defineStore('fees', () => {
     return removed
   }
 
+  // Undo/restore: backup items restore (id clash टाळतो)
   function restoreMany(items: Fee[]) {
     if (!items.length) return false
 
@@ -312,6 +344,7 @@ export const useFeesStore = defineStore('fees', () => {
     return true
   }
 
+  // Payment flow: installment add → paid/pending/status recalculation
   function addInstallment(
     feeId: number,
     payload: Omit<FeeInstallment, 'id' | 'receiptNo'> & { receiptNo?: string },
@@ -340,6 +373,7 @@ export const useFeesStore = defineStore('fees', () => {
     return created
   }
 
+  // Dashboard aggregates / quick stats
   const totalRecords = computed(() => fees.value.length)
   const totalCollected = computed(() => fees.value.reduce((sum, item) => sum + item.paidAmount, 0))
   const totalPending = computed(() => fees.value.reduce((sum, item) => sum + item.pendingAmount, 0))

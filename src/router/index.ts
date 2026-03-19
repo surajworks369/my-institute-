@@ -1,3 +1,13 @@
+/**
+ * router/index.ts
+ *
+ * काम:
+ * - app मधील सर्व routes define करणे
+ * - public आणि protected pages वेगळे handle करणे
+ * - login check करणे
+ * - page title बदलणे
+ */
+
 import { createRouter, createWebHashHistory, type RouteRecordRaw } from 'vue-router'
 import { useAuthStore } from '@/stores/authStore'
 
@@ -9,10 +19,10 @@ import MainLayout from '../layouts/MainLayout.vue'
 import Login from '../views/auth/LoginPage.vue'
 import Register from '../views/auth/RegisterPage.vue'
 
-// तुमचे बाकी सर्व existing imports इथे तसेच ठेवा
-// Students, Courses, Batches, Attendance, Exams, Fees, Reports, Staff, Settings...
-
 const routes: RouteRecordRaw[] = [
+  // =========================
+  // Public Routes
+  // =========================
   {
     path: '/',
     name: 'Landing',
@@ -39,10 +49,14 @@ const routes: RouteRecordRaw[] = [
     ],
   },
 
+  // =========================
+  // Protected Routes
+  // =========================
   {
     path: '/',
     component: MainLayout,
     children: [
+      // Dashboard
       {
         path: 'dashboard',
         name: 'Dashboard',
@@ -50,11 +64,227 @@ const routes: RouteRecordRaw[] = [
         meta: { requiresAuth: true, title: 'Dashboard' },
       },
 
-      // तुमचे बाकी existing protected routes इथे तसेच ठेवा
-      // students, courses, batches, attendance, exams, fees, reports, staff, settings...
+      // =========================
+      // Students
+      // =========================
+      {
+        path: 'students',
+        name: 'Students',
+        component: () => import('../views/students/StudentList.vue'),
+        meta: { requiresAuth: true, title: 'Students' },
+      },
+      {
+        path: 'students/add',
+        name: 'AddStudent',
+        component: () => import('../views/students/AddStudent.vue'),
+        meta: { requiresAuth: true, title: 'Add Student' },
+      },
+      {
+        path: 'students/edit/:id',
+        name: 'EditStudent',
+        component: () => import('../views/students/EditStudent.vue'),
+        meta: { requiresAuth: true, title: 'Edit Student' },
+      },
+      {
+        path: 'students/view/:id',
+        name: 'ViewStudent',
+        component: () => import('../views/students/ViewStudent.vue'),
+        meta: { requiresAuth: true, title: 'View Student' },
+      },
+
+      // =========================
+      // Courses
+      // =========================
+      {
+        path: 'courses',
+        name: 'Courses',
+        component: () => import('../views/courses/CourseList.vue'),
+        meta: { requiresAuth: true, title: 'Courses' },
+      },
+      {
+        path: 'courses/add',
+        name: 'AddCourse',
+        component: () => import('../views/courses/AddCourse.vue'),
+        meta: { requiresAuth: true, title: 'Add Course' },
+      },
+      {
+        path: 'courses/edit/:id',
+        name: 'EditCourse',
+        component: () => import('../views/courses/EditCourse.vue'),
+        meta: { requiresAuth: true, title: 'Edit Course' },
+      },
+      {
+        path: 'courses/view/:id',
+        name: 'ViewCourse',
+        component: () => import('../views/courses/ViewCourse.vue'),
+        meta: { requiresAuth: true, title: 'View Course' },
+      },
+
+      // =========================
+      // Batches
+      // =========================
+      {
+        path: 'batches',
+        name: 'Batches',
+        component: () => import('../views/batches/BatchList.vue'),
+        meta: { requiresAuth: true, title: 'Batches' },
+      },
+      {
+        path: 'batches/add',
+        name: 'AddBatch',
+        component: () => import('../views/batches/AddBatch.vue'),
+        meta: { requiresAuth: true, title: 'Add Batch' },
+      },
+      {
+        path: 'batches/edit/:id',
+        name: 'EditBatch',
+        component: () => import('../views/batches/EditBatch.vue'),
+        meta: { requiresAuth: true, title: 'Edit Batch' },
+      },
+      {
+        path: 'batches/view/:id',
+        name: 'ViewBatch',
+        component: () => import('../views/batches/ViewBatch.vue'),
+        meta: { requiresAuth: true, title: 'View Batch' },
+      },
+
+      // =========================
+      // Attendance
+      // =========================
+      {
+        path: 'attendance',
+        name: 'Attendance',
+        component: () => import('../views/attendance/AttendanceList.vue'),
+        meta: { requiresAuth: true, title: 'Attendance' },
+      },
+      {
+        path: 'attendance/add',
+        name: 'AddAttendance',
+        component: () => import('../views/attendance/AddAttendance.vue'),
+        meta: { requiresAuth: true, title: 'Add Attendance' },
+      },
+      {
+        path: 'attendance/edit/:id',
+        name: 'EditAttendance',
+        component: () => import('../views/attendance/EditAttendance.vue'),
+        meta: { requiresAuth: true, title: 'Edit Attendance' },
+      },
+      {
+        path: 'attendance/view/:id',
+        name: 'ViewAttendance',
+        component: () => import('../views/attendance/ViewAttendance.vue'),
+        meta: { requiresAuth: true, title: 'View Attendance' },
+      },
+
+      // =========================
+      // Exams
+      // =========================
+      {
+        path: 'exams',
+        name: 'Exams',
+        component: () => import('../views/exams/ExamList.vue'),
+        meta: { requiresAuth: true, title: 'Exams' },
+      },
+      {
+        path: 'exams/add',
+        name: 'AddExam',
+        component: () => import('../views/exams/AddExam.vue'),
+        meta: { requiresAuth: true, title: 'Add Exam' },
+      },
+      {
+        path: 'exams/edit/:id',
+        name: 'EditExam',
+        component: () => import('../views/exams/EditExam.vue'),
+        meta: { requiresAuth: true, title: 'Edit Exam' },
+      },
+      {
+        path: 'exams/view/:id',
+        name: 'ViewExam',
+        component: () => import('../views/exams/ViewExam.vue'),
+        meta: { requiresAuth: true, title: 'View Exam' },
+      },
+
+      // =========================
+      // Fees
+      // =========================
+      {
+        path: 'fees',
+        name: 'Fees',
+        component: () => import('../views/fees/FeesList.vue'),
+        meta: { requiresAuth: true, title: 'Fees' },
+      },
+      {
+        path: 'fees/add',
+        name: 'AddFees',
+        component: () => import('../views/fees/AddFees.vue'),
+        meta: { requiresAuth: true, title: 'Add Fees' },
+      },
+      {
+        path: 'fees/edit/:id',
+        name: 'EditFees',
+        component: () => import('../views/fees/EditFees.vue'),
+        meta: { requiresAuth: true, title: 'Edit Fees' },
+      },
+      {
+        path: 'fees/view/:id',
+        name: 'ViewFees',
+        component: () => import('../views/fees/ViewFees.vue'),
+        meta: { requiresAuth: true, title: 'View Fees' },
+      },
+
+      // =========================
+      // Reports
+      // =========================
+      {
+        path: 'reports',
+        name: 'Reports',
+        component: () => import('../views/reports/ReportsPage.vue'),
+        meta: { requiresAuth: true, title: 'Reports' },
+      },
+
+      // =========================
+      // Staff
+      // =========================
+      {
+        path: 'staff',
+        name: 'Staff',
+        component: () => import('../views/staff/StaffList.vue'),
+        meta: { requiresAuth: true, title: 'Staff' },
+      },
+      {
+        path: 'staff/add',
+        name: 'AddStaff',
+        component: () => import('../views/staff/AddStaff.vue'),
+        meta: { requiresAuth: true, title: 'Add Staff' },
+      },
+      {
+        path: 'staff/edit/:id',
+        name: 'EditStaff',
+        component: () => import('../views/staff/EditStaff.vue'),
+        meta: { requiresAuth: true, title: 'Edit Staff' },
+      },
+      {
+        path: 'staff/view/:id',
+        name: 'ViewStaff',
+        component: () => import('../views/staff/ViewStaff.vue'),
+        meta: { requiresAuth: true, title: 'View Staff' },
+      },
+
+      // =========================
+      // Settings
+      // =========================
+      {
+        path: 'settings',
+        name: 'Settings',
+        component: () => import('../views/settings/SettingsPage.vue'),
+        meta: { requiresAuth: true, title: 'Settings' },
+      },
     ],
   },
 
+  // =========================
+  // Not Found
+  // =========================
   {
     path: '/:pathMatch(.*)*',
     name: 'NotFound',
@@ -74,13 +304,16 @@ const router = createRouter({
 router.beforeEach((to, _from, next) => {
   const authStore = useAuthStore()
 
+  // reload नंतर auth state पुन्हा localStorage मधून घेते
   authStore.initialize()
 
+  // protected page असेल आणि login नसेल तर login page वर पाठवायचे
   if (to.meta.requiresAuth && !authStore.isAuthenticated) {
     next('/auth/login')
     return
   }
 
+  // login झालेला user पुन्हा login/register वर गेला तर dashboard ला पाठवायचे
   if (authStore.isAuthenticated && (to.path === '/auth/login' || to.path === '/auth/register')) {
     next('/dashboard')
     return

@@ -1,15 +1,34 @@
+/**
+ * `stores/batchesStore.ts` (Batches Store / Pinia)
+ *
+ * - **कशासाठी**: Batches module साठी data (list + CRUD) आणि derived stats (active/total/enrolled) manage करणे.
+ * - **Project मधली role**: Batches pages + attendance/students/dashboard ला batch reference data देतो.
+ * - **Logic प्रकार**:
+ *   - localStorage persistence (`STORAGE_KEY`)
+ *   - seed batches generation (master seeds + courses linkage)
+ *   - normalize: seed + stored merge
+ *   - enrollment sync (students list वरून batch-wise counts)
+ * - **File प्रकार**: store (frontend / Pinia)
+ *
+ * Note: सध्या batches frontend/localStorage मध्ये आहेत. पुढे backend/API आल्यावर CRUD server-side होईल
+ * आणि `courseId` validation backend वर enforce होऊ शकते.
+ */
+
 import { defineStore } from 'pinia'
 import type { Batch, BatchCreateInput, BatchUpdateInput, BatchStatus } from '@/types/batch'
 import type { Student } from '@/types/student'
 import { buildMasterBatchSeeds } from '@/stores/erpMasterData'
 import { useCourseStore } from '@/stores/courseStore'
 
+// localStorage key: batches persistence साठी
 const STORAGE_KEY = 'vbh_erp_batches_v3'
 
+// Timestamp helper (createdAt/updatedAt साठी)
 function nowISO(): string {
   return new Date().toISOString()
 }
 
+// localStorage → batches load
 function loadFromStorage(): Batch[] {
   try {
     const raw = localStorage.getItem(STORAGE_KEY)
@@ -21,10 +40,12 @@ function loadFromStorage(): Batch[] {
   }
 }
 
+// batches persist
 function saveToStorage(batches: Batch[]): void {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(batches))
 }
 
+// Seed data: master batch seeds + courseStore मधून courseId resolve
 function seedData(): Batch[] {
   const courseStore = useCourseStore()
   courseStore.init()
@@ -56,6 +77,7 @@ function seedData(): Batch[] {
   })
 }
 
+// Stored batches ला seed सोबत align/merge (missing seeds add; extra stored keep)
 function normalizeStoredBatches(stored: Batch[]): Batch[] {
   const seeded = seedData()
   if (!stored.length) return seeded
@@ -103,6 +125,7 @@ export const useBatchesStore = defineStore('batches', {
   },
 
   actions: {
+    // Init: localStorage/seed based batches load (force=true ने reload)
     init(force = false): void {
       if (this.loaded && !force) return
 
@@ -112,6 +135,7 @@ export const useBatchesStore = defineStore('batches', {
       saveToStorage(this.batches)
     },
 
+    // Students बदलल्यावर batch-wise enrolled counts re-calc
     syncEnrollmentFromStudents(students: Student[]) {
       const counts = students.reduce<Record<string, number>>((acc, student) => {
         acc[student.batch] = (acc[student.batch] ?? 0) + 1
@@ -127,6 +151,7 @@ export const useBatchesStore = defineStore('batches', {
       saveToStorage(this.batches)
     },
 
+    // CRUD: create batch
     create(payload: BatchCreateInput): Batch {
       const maxId = this.batches.reduce((m, b) => Math.max(m, b.id), 0)
 
@@ -143,6 +168,7 @@ export const useBatchesStore = defineStore('batches', {
       return created
     },
 
+    // CRUD: update batch (capacity/enrolled constraints ensure)
     update(id: number, patch: BatchUpdateInput): Batch | null {
       const index = this.batches.findIndex((b) => b.id === id)
       if (index === -1) return null
@@ -179,6 +205,7 @@ export const useBatchesStore = defineStore('batches', {
       return updated
     },
 
+    // CRUD: delete batch
     remove(id: number): boolean {
       const before = this.batches.length
       this.batches = this.batches.filter((b) => b.id !== id)
@@ -186,10 +213,12 @@ export const useBatchesStore = defineStore('batches', {
       return this.batches.length !== before
     },
 
+    // Status helper: active/inactive switch
     setStatus(id: number, status: BatchStatus): void {
       this.update(id, { status })
     },
 
+    // Reset: seed वर परत
     resetToSeed() {
       this.batches = seedData()
       this.loaded = true

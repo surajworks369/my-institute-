@@ -1,4 +1,19 @@
-// src/stores/attendanceStore.ts
+/**
+ * `stores/attendanceStore.ts` (Attendance Store / Pinia)
+ *
+ * - **कशासाठी**: Attendance records (mark/edit/delete) manage करणे आणि counts/distribution provide करणे.
+ * - **Project मधली role**: Attendance pages + dashboard ला attendance data आणि summary मिळते.
+ * - **Logic प्रकार**:
+ *   - localStorage persistence (`STORAGE_KEY`)
+ *   - records normalize (student/course/batch linkage validate)
+ *   - seed records generation (demo data)
+ *   - create/update वेळी duplicate entry (date+batch+student) टाळणे
+ * - **File प्रकार**: store (frontend / Pinia)
+ *
+ * Note: सध्या linkage validation पूर्णपणे frontend वर आहे. पुढे backend/API आल्यावर
+ * duplicates/constraints server-side enforce होतील आणि init/create/update API calls होतील.
+ */
+
 import { defineStore } from 'pinia'
 import type {
   Attendance,
@@ -11,12 +26,15 @@ import { useBatchesStore } from '@/stores/batchesStore'
 import { useCourseStore } from '@/stores/courseStore'
 import { useStudentStore } from '@/stores/studentsStore'
 
+// localStorage key: attendance persistence साठी
 const STORAGE_KEY = 'vbh_erp_attendance_v3'
 
+// Timestamp helper (createdAt/updatedAt साठी)
 function nowISO(): string {
   return new Date().toISOString()
 }
 
+// Date helpers: UI filters/unique keys साठी YYYY-MM-DD normalize
 function toYMD(date: Date): string {
   const y = date.getFullYear()
   const m = String(date.getMonth() + 1).padStart(2, '0')
@@ -28,12 +46,14 @@ function todayYMD(): string {
   return toYMD(new Date())
 }
 
+// Seed/demo purposes: आजपासून मागे N दिवस shift करून date बनवतो
 function shiftDate(base: string, days: number): string {
   const dt = new Date(base)
   dt.setDate(dt.getDate() - days)
   return toYMD(dt)
 }
 
+// localStorage → attendance load
 function loadFromStorage(): Attendance[] {
   try {
     const raw = localStorage.getItem(STORAGE_KEY)
@@ -45,14 +65,17 @@ function loadFromStorage(): Attendance[] {
   }
 }
 
+// attendance persist
 function saveToStorage(items: Attendance[]): void {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(items))
 }
 
+// Unique constraint key: (date + batchId + studentId) एकदाच allowed
 function uniqueKey(date: string, batchId: number, studentId: number): string {
   return `${date}__${batchId}__${studentId}`
 }
 
+// Seed/demo: deterministic-ish status pick
 function pickStatus(i: number): AttendanceStatus {
   if (i % 11 === 0) return 'Absent'
   if (i % 7 === 0) return 'Late'
@@ -76,6 +99,7 @@ export const useAttendanceStore = defineStore('attendance', {
   },
 
   actions: {
+    // Init: related stores init (students/courses/batches) + storage normalize/seed
     init(force = false): void {
       if (this.loaded && !force) return
 
@@ -95,6 +119,7 @@ export const useAttendanceStore = defineStore('attendance', {
       saveToStorage(this.items)
     },
 
+    // Safe status normalize (unknown → Present)
     normalizeStatus(status: unknown): AttendanceStatus {
       if (status === 'Present' || status === 'Absent' || status === 'Late' || status === 'Leave') {
         return status
@@ -102,6 +127,10 @@ export const useAttendanceStore = defineStore('attendance', {
       return 'Present'
     },
 
+    // Stored records normalize:
+    // - student अस्तित्वात आहे का तपासा
+    // - course/batch resolve करा (id किंवा student data वरून)
+    // - duplicate entries drop करा
     normalizeRecords(records: Attendance[]): Attendance[] {
       const courseStore = useCourseStore()
       const batchStore = useBatchesStore()
@@ -158,6 +187,7 @@ export const useAttendanceStore = defineStore('attendance', {
         })
     },
 
+    // UI forms साठी helper: selected studentId वरून linked course/batch resolve
     getLinkedData(studentId: number, courseId?: number, batchId?: number) {
       const courseStore = useCourseStore()
       const batchStore = useBatchesStore()
@@ -191,6 +221,7 @@ export const useAttendanceStore = defineStore('attendance', {
       }
     },
 
+    // Create/update वेळी student-course-batch mismatch टाळण्यासाठी validation
     validateLinkedSelection(payload: {
       studentId: number
       courseId: number
@@ -210,6 +241,7 @@ export const useAttendanceStore = defineStore('attendance', {
       return true
     },
 
+    // Duplicate entry check: same date+batch+student (excludeId update साठी)
     hasEntry(date: string, batchId: number, studentId: number, excludeId = 0): boolean {
       const key = uniqueKey(date, batchId, studentId)
       return this.items.some(
@@ -217,6 +249,7 @@ export const useAttendanceStore = defineStore('attendance', {
       )
     },
 
+    // Seed/demo records: students list वरून काही entries तयार करतो
     seed(count?: number): Attendance[] {
       const studentStore = useStudentStore()
       const courseStore = useCourseStore()
@@ -287,6 +320,7 @@ export const useAttendanceStore = defineStore('attendance', {
       })
     },
 
+    // CRUD: create attendance (validation + duplicate check)
     create(payload: AttendanceCreateInput): Attendance | null {
       const valid = this.validateLinkedSelection({
         studentId: Number(payload.studentId),
@@ -317,6 +351,7 @@ export const useAttendanceStore = defineStore('attendance', {
       return created
     },
 
+    // CRUD: update attendance (validation + duplicate check)
     update(id: number, patch: AttendanceUpdateInput): Attendance | null {
       const index = this.items.findIndex((x) => x.id === id)
       if (index === -1) return null
@@ -356,6 +391,7 @@ export const useAttendanceStore = defineStore('attendance', {
       return updated
     },
 
+    // CRUD: delete single record
     remove(id: number): boolean {
       const before = this.items.length
       this.items = this.items.filter((x) => x.id !== id)
@@ -363,6 +399,7 @@ export const useAttendanceStore = defineStore('attendance', {
       return this.items.length !== before
     },
 
+    // CRUD: bulk delete
     removeMany(ids: number[]): Attendance[] {
       if (!ids.length) return []
 
@@ -373,6 +410,7 @@ export const useAttendanceStore = defineStore('attendance', {
       return removed
     },
 
+    // Undo/restore: backup records restore (id/key clash टाळतो)
     restoreMany(records: Attendance[]): boolean {
       if (!records.length) return false
 
@@ -399,6 +437,7 @@ export const useAttendanceStore = defineStore('attendance', {
       return true
     },
 
+    // Reset: seed वर परत
     resetToSeed(count?: number): void {
       this.items = this.seed(count)
       this.loaded = true

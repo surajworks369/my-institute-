@@ -1,11 +1,14 @@
 <template>
+  <!-- Login page: auth layout मधल्या right panel मध्ये दिसणारा form -->
   <div class="center-page">
     <div class="auth-card fade-in">
+      <!-- Page heading / guidance -->
       <div class="card-head">
         <h2>Login to ERP</h2>
         <p>Welcome back. Enter your credentials to continue.</p>
       </div>
 
+      <!-- Login form submit: store login + redirect -->
       <form class="auth-form" @submit.prevent="handleLogin">
         <div class="form-group">
           <label class="form-label" for="login-email">Email</label>
@@ -32,6 +35,7 @@
         <button type="submit" class="submit-btn">Login</button>
       </form>
 
+      <!-- Register navigation link -->
       <p class="bottom-text">
         Don't have an account?
         <router-link class="auth-link" to="/auth/register">Register</router-link>
@@ -41,17 +45,31 @@
 </template>
 
 <script setup lang="ts">
+/**
+ * `views/auth/LoginPage.vue` (Login Page)
+ *
+ * - **कशासाठी**: User login form देणे आणि successful login नंतर dashboard ला नेणे.
+ * - **Project मधली role**: `/auth/login` route वरून auth flow सुरू होतो.
+ * - **Logic प्रकार**: form state (refs) + submit handler + authStore login + router navigation.
+ * - **File प्रकार**: view (frontend)
+ *
+ * Note: सध्या login verification localStorage-demo users वर आहे; पुढे backend/API call ने replace होईल.
+ */
+
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/authStore'
 
+// Navigation
 const router = useRouter()
+// Auth store: login + session state
 const authStore = useAuthStore()
 
+// Form state
 const email = ref<string>('')
 const password = ref<string>('')
 
-// 🔥 IMPORTANT FIX
+// Page load: reload नंतर store initialize; आधीच login असेल तर dashboard ला direct
 onMounted(() => {
   authStore.initialize()
 
@@ -61,6 +79,7 @@ onMounted(() => {
   }
 })
 
+// Form submit handler: basic validation + login attempt + redirect
 const handleLogin = (): void => {
   if (!email.value || !password.value) {
     alert('Please enter email and password')
@@ -70,7 +89,8 @@ const handleLogin = (): void => {
   const success: boolean = authStore.login(email.value, password.value)
 
   if (success) {
-    router.replace('/dashboard') // 🔥 replace (back ला login येणार नाही)
+    // replace: back केल्यावर login page परत येऊ नये म्हणून
+    router.replace('/dashboard')
   } else {
     alert('Invalid email or password')
   }

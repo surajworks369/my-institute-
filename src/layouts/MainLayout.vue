@@ -11,10 +11,12 @@
     <div class="main-shell">
       <div class="mobile-topbar">
         <button class="mobile-menu-btn" type="button" @click="toggleMobileSidebar">☰</button>
-        <div class="mobile-title">Institute ERP</div>
+        <div class="mobile-title">{{ mobilePageTitle }}</div>
       </div>
 
-      <Navbar />
+      <div class="desktop-navbar">
+        <Navbar />
+      </div>
 
       <main ref="contentShellRef" class="content-shell">
         <div class="content-inner">
@@ -28,7 +30,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, nextTick, onMounted, onBeforeUnmount } from 'vue'
+import { ref, watch, nextTick, onMounted, onBeforeUnmount, computed } from 'vue'
 import { useRoute } from 'vue-router'
 import Sidebar from '../components/layout/SidebarLayout.vue'
 import Navbar from '../components/layout/NavbarLayout.vue'
@@ -38,6 +40,23 @@ const route = useRoute()
 const contentShellRef = ref<HTMLElement | null>(null)
 const mobileSidebarOpen = ref(false)
 const isMobile = ref(false)
+
+const mobilePageTitle = computed(() => {
+  const path = route.path
+
+  if (path.startsWith('/dashboard')) return 'Dashboard'
+  if (path.startsWith('/students')) return 'Students'
+  if (path.startsWith('/courses')) return 'Courses'
+  if (path.startsWith('/batches')) return 'Batches'
+  if (path.startsWith('/attendance')) return 'Attendance'
+  if (path.startsWith('/exams')) return 'Exams'
+  if (path.startsWith('/fees')) return 'Fees'
+  if (path.startsWith('/reports')) return 'Reports'
+  if (path.startsWith('/staff')) return 'Staff'
+  if (path.startsWith('/settings')) return 'Settings'
+
+  return 'Institute ERP'
+})
 
 const checkMobile = () => {
   isMobile.value = window.innerWidth <= 1024
@@ -65,7 +84,16 @@ watch(
     if (isMobile.value) {
       closeMobileSidebar()
     }
+
+    if (contentShellRef.value) {
+      contentShellRef.value.scrollTo({
+        top: 0,
+        left: 0,
+        behavior: 'auto',
+      })
+    }
   },
+  { immediate: true },
 )
 
 onMounted(() => {
@@ -95,6 +123,10 @@ onBeforeUnmount(() => {
   grid-template-rows: 78px minmax(0, 1fr) 56px;
   overflow: hidden;
   position: relative;
+}
+
+.desktop-navbar {
+  display: block;
 }
 
 .content-shell {
@@ -149,34 +181,42 @@ onBeforeUnmount(() => {
 
 @media (max-width: 1024px) {
   .main-shell {
-    grid-template-rows: 60px 78px minmax(0, 1fr) 56px;
+    grid-template-rows: 58px minmax(0, 1fr) 56px;
+  }
+
+  .desktop-navbar {
+    display: none;
   }
 
   .mobile-topbar {
     display: flex;
     align-items: center;
     gap: 12px;
-    padding: 0 16px;
+    padding: 0 12px;
     background: #ffffff;
     border-bottom: 1px solid rgba(148, 163, 184, 0.18);
     z-index: 40;
   }
 
   .mobile-menu-btn {
-    width: 42px;
-    height: 42px;
+    width: 40px;
+    height: 40px;
     border: none;
     border-radius: 12px;
     background: linear-gradient(135deg, #3b82f6, #4f46e5);
     color: white;
     font-size: 20px;
     cursor: pointer;
+    flex-shrink: 0;
   }
 
   .mobile-title {
-    font-size: 18px;
-    font-weight: 700;
+    font-size: 16px;
+    font-weight: 800;
     color: #1e293b;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
   .mobile-overlay {
@@ -188,7 +228,7 @@ onBeforeUnmount(() => {
   }
 
   .content-inner {
-    padding: 14px;
+    padding: 12px;
   }
 }
 </style>

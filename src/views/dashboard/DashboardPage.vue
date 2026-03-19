@@ -3,7 +3,7 @@
     <!-- Hero -->
     <section class="hero-card">
       <div class="hero-content">
-        <div>
+        <div class="hero-main">
           <p class="hero-eyebrow">Institute Overview</p>
           <h1>Dashboard</h1>
           <p class="hero-subtitle">
@@ -1220,7 +1220,7 @@ function resetFilters() {
 .hero-card {
   position: relative;
   overflow: hidden;
-  padding: 28px;
+  padding: 24px;
   border-radius: 28px;
   background: linear-gradient(135deg, #1e3a8a, #4f46e5, #7c3aed);
   color: #ffffff;
@@ -1245,6 +1245,10 @@ function resetFilters() {
   justify-content: space-between;
   gap: 20px;
   align-items: flex-start;
+}
+
+.hero-main {
+  min-width: 0;
 }
 
 .hero-eyebrow {
@@ -1886,19 +1890,52 @@ function resetFilters() {
 
 @media (max-width: 768px) {
   .dashboard-page {
-    gap: 18px;
+    gap: 14px;
   }
 
-  .hero-card,
-  .panel {
+  .hero-card {
     padding: 16px;
+    border-radius: 22px;
+  }
+
+  .panel {
+    padding: 14px;
+    border-radius: 20px;
+  }
+
+  .hero-content {
+    gap: 14px;
+  }
+
+  .hero-eyebrow {
+    display: none;
   }
 
   .hero-content h1 {
-    font-size: 28px;
+    font-size: 26px;
+    margin-bottom: 6px;
   }
 
-  .hero-highlight-grid,
+  .hero-subtitle {
+    font-size: 13px;
+    line-height: 1.45;
+  }
+
+  .hero-highlight-grid {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .hero-mini-card {
+    padding: 14px 12px;
+    border-radius: 16px;
+  }
+
+  .hero-mini-card strong {
+    font-size: 18px;
+  }
+
+  .dashboard-toolbar-grid,
   .dashboard-stats-grid,
   .stats-grid,
   .insight-grid,
@@ -1907,24 +1944,147 @@ function resetFilters() {
     grid-template-columns: 1fr;
   }
 
-  .dashboard-toolbar-grid {
-    grid-template-columns: 1fr;
-  }
-
   .section-top,
   .panel-head,
   .widget-head {
     flex-direction: column;
     align-items: flex-start;
+    gap: 10px;
+    margin-bottom: 12px;
+  }
+
+  .eyebrow {
+    margin-bottom: 4px;
+    font-size: 11px;
+  }
+
+  .panel h2,
+  .panel h3 {
+    font-size: 20px;
+  }
+
+  .toolbar-field select,
+  .toolbar-field input {
+    min-height: 40px;
+    font-size: 14px;
+    padding: 8px 10px;
+  }
+
+  .compact-btn,
+  .view-all-btn {
+    min-height: 34px;
+    padding: 7px 12px;
+    font-size: 13px;
+  }
+
+  .stat-card {
+    min-height: auto;
+    padding: 16px;
+    gap: 12px;
+    border-radius: 18px;
+  }
+
+  .stat-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 14px;
+    font-size: 20px;
+  }
+
+  .stat-content p {
+    font-size: 13px;
+    margin-bottom: 4px;
+  }
+
+  .stat-content h3 {
+    font-size: 24px;
+    margin-bottom: 6px;
+  }
+
+  .stat-content small {
+    font-size: 11px;
   }
 
   .mini-chart {
     grid-template-columns: repeat(3, minmax(0, 1fr));
     min-height: auto;
+    gap: 10px;
   }
 
   .chart-bar-item {
-    min-height: 190px;
+    min-height: 180px;
+  }
+
+  .chart-bar-wrap {
+    height: 130px;
+    padding: 0 6px;
+  }
+
+  .alert-card {
+    padding: 14px;
+    border-radius: 16px;
+  }
+
+  .alert-icon {
+    width: 42px;
+    height: 42px;
+    border-radius: 12px;
+    font-size: 18px;
+  }
+
+  .quick-action-btn {
+    padding: 14px;
+    border-radius: 16px;
+  }
+
+  .quick-action-btn span {
+    font-size: 20px;
+  }
+
+  .widget-table table {
+    min-width: 480px;
+  }
+}
+
+@media (max-width: 520px) {
+  .dashboard-page {
+    gap: 12px;
+  }
+
+  .hero-card,
+  .panel {
+    padding: 12px;
+  }
+
+  .hero-content h1 {
+    font-size: 22px;
+  }
+
+  .hero-subtitle {
+    font-size: 12px;
+  }
+
+  .hero-mini-card span {
+    font-size: 11px;
+  }
+
+  .hero-mini-card strong {
+    font-size: 16px;
+  }
+
+  .panel h2,
+  .panel h3 {
+    font-size: 18px;
+  }
+
+  .metric-row,
+  .distribution-head,
+  .course-label {
+    font-size: 13px;
+  }
+
+  .widget-table table {
+    min-width: 420px;
   }
 }
 </style>

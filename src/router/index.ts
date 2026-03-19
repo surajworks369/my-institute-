@@ -1,4 +1,4 @@
-import { createRouter, createWebHistory, type RouteRecordRaw } from 'vue-router'
+import { createRouter, createWebHashHistory, type RouteRecordRaw } from 'vue-router'
 import { useAuthStore } from '@/stores/authStore'
 
 // Layouts
@@ -9,7 +9,8 @@ import MainLayout from '../layouts/MainLayout.vue'
 import Login from '../views/auth/LoginPage.vue'
 import Register from '../views/auth/RegisterPage.vue'
 
-// बाकी imports same ठेव (तुझ्यासारखेच)
+// तुमचे बाकी सर्व existing imports इथे तसेच ठेवा
+// Students, Courses, Batches, Attendance, Exams, Fees, Reports, Staff, Settings...
 
 const routes: RouteRecordRaw[] = [
   {
@@ -49,7 +50,8 @@ const routes: RouteRecordRaw[] = [
         meta: { requiresAuth: true, title: 'Dashboard' },
       },
 
-      // 👉 बाकी सगळे routes SAME ठेव (copy paste तुझ्यासारखेच)
+      // तुमचे बाकी existing protected routes इथे तसेच ठेवा
+      // students, courses, batches, attendance, exams, fees, reports, staff, settings...
     ],
   },
 
@@ -62,34 +64,29 @@ const routes: RouteRecordRaw[] = [
 ]
 
 const router = createRouter({
-  history: createWebHistory(),
+  history: createWebHashHistory(),
   routes,
   scrollBehavior() {
     return { top: 0, left: 0, behavior: 'smooth' }
   },
 })
 
-/* 🔥🔥🔥 MAIN FIX HERE 🔥🔥🔥 */
-router.beforeEach((to, from, next) => {
+router.beforeEach((to, _from, next) => {
   const authStore = useAuthStore()
 
-  // 👉 reload नंतर state restore
   authStore.initialize()
 
-  // 👉 जर login नसताना protected page
   if (to.meta.requiresAuth && !authStore.isAuthenticated) {
     next('/auth/login')
+    return
   }
 
-  // 👉 जर already login असून login page ला गेला
-  else if (
-    authStore.isAuthenticated &&
-    (to.path === '/auth/login' || to.path === '/auth/register')
-  ) {
+  if (authStore.isAuthenticated && (to.path === '/auth/login' || to.path === '/auth/register')) {
     next('/dashboard')
-  } else {
-    next()
+    return
   }
+
+  next()
 })
 
 router.afterEach((to) => {

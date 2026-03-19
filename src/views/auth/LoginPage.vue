@@ -41,7 +41,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/authStore'
 
@@ -50,6 +50,16 @@ const authStore = useAuthStore()
 
 const email = ref<string>('')
 const password = ref<string>('')
+
+// 🔥 IMPORTANT FIX
+onMounted(() => {
+  authStore.initialize()
+
+  // 👉 already login असेल तर direct dashboard
+  if (authStore.isAuthenticated) {
+    router.replace('/dashboard')
+  }
+})
 
 const handleLogin = (): void => {
   if (!email.value || !password.value) {
@@ -60,7 +70,7 @@ const handleLogin = (): void => {
   const success: boolean = authStore.login(email.value, password.value)
 
   if (success) {
-    router.push('/dashboard')
+    router.replace('/dashboard') // 🔥 replace (back ला login येणार नाही)
   } else {
     alert('Invalid email or password')
   }

@@ -241,6 +241,30 @@ const routes: RouteRecordRaw[] = [
         component: () => import('../views/reports/ReportsPage.vue'),
         meta: { requiresAuth: true, title: 'Reports' },
       },
+      {
+        path: 'reports/students',
+        name: 'StudentReport',
+        component: () => import('../views/reports/StudentReport.vue'),
+        meta: { requiresAuth: true, title: 'Student Report' },
+      },
+      {
+        path: 'reports/attendance',
+        name: 'AttendanceReport',
+        component: () => import('../views/reports/AttendanceReport.vue'),
+        meta: { requiresAuth: true, title: 'Attendance Report' },
+      },
+      {
+        path: 'reports/exams',
+        name: 'ExamReport',
+        component: () => import('../views/reports/ExamReport.vue'),
+        meta: { requiresAuth: true, title: 'Exam Report' },
+      },
+      {
+        path: 'reports/fees',
+        name: 'FeesReport',
+        component: () => import('../views/reports/FeesReport.vue'),
+        meta: { requiresAuth: true, title: 'Fees Report' },
+      },
 
       // =========================
       // Staff

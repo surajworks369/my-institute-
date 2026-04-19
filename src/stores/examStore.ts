@@ -1,18 +1,18 @@
 /**
  * `stores/examStore.ts` (Exams + Marks Store / Pinia)
  *
- * - **कशासाठी**: Exams schedule आणि exam marks entries (pass/fail) manage करणे.
- * - **Project मधली role**: Exams pages + dashboard/reports ला exams/marks data आणि counts provide करतो.
- * - **Logic प्रकार**:
- *   - localStorage persistence (`STORAGE_KEY`) – exams + marks एकत्र save
- *   - normalize: batch/course/student linkage validate
- *   - seed exams + marks generation (demo)
- *   - create/update वेळी duplicate mark entry (examId+studentId) टाळणे
- * - **File प्रकार**: store (frontend / Pinia)
+ * - **Purpose**: Manage exam schedules and mark entries (pass/fail).
+ * - **Role in project**: Supplies exam/mark data and counts to exam pages, dashboard, and reports.
+ * - **Logic type**:
+ *   - localStorage persistence (`STORAGE_KEY`) — exams + marks saved together
+ *   - Normalize and validate batch/course/student linkage
+ *   - Seeded demo exams and marks
+ *   - Prevent duplicate mark rows (examId + studentId) on create/update
+ * - **File type**: Store (frontend / Pinia)
  *
- * Note: सध्या validation frontend वर आहे. पुढे backend/API आल्यावर:
- * - exam schedules आणि marks server-side manage होतील
- * - pass/fail आणि marks clamp/validation backend वर enforce होऊ शकते
+ * Note: Validation is client-side today. With a backend/API:
+ * - Exam schedules and marks can be managed server-side
+ * - Pass/fail and mark clamping can be enforced on the server
  */
 
 import { defineStore } from 'pinia'
@@ -38,7 +38,7 @@ import { useCourseStore } from '@/stores/courseStore'
 import { useStudentStore } from '@/stores/studentsStore'
 import type { Student } from '@/types/student'
 
-// localStorage key: exams + marks persistence साठी
+// localStorage key for exams + marks persistence
 const STORAGE_KEY = 'vbh_erp_exams_v3'
 
 type StorageShape = {
@@ -78,7 +78,7 @@ function safeParseStorage(): StorageShape {
   }
 }
 
-// exams + marks एकत्र persist करतो
+// Persist exams + marks together
 function saveStorage(exams: Exam[], marks: ExamMark[]): void {
   const payload: StorageShape = { exams, marks }
   localStorage.setItem(STORAGE_KEY, JSON.stringify(payload))
@@ -190,7 +190,7 @@ export const useExamStore = defineStore('exams', {
         .filter((item): item is Exam => Boolean(item))
     },
 
-    // Storage normalize: marks मध्ये student/exam link validate + duplicates drop
+    // Storage normalize: validate student/exam links in marks and drop duplicates
     normalizeMarks(marks: ExamMark[], exams: Exam[]): ExamMark[] {
       const examMap = new Map(exams.map((exam) => [exam.id, exam]))
       const studentStore = useStudentStore()
@@ -227,7 +227,7 @@ export const useExamStore = defineStore('exams', {
       return result.filter((item) => item.id > 0)
     },
 
-    // Exam form linkage helper: batchId आणि courseId match आहेत का?
+    // Exam form linkage helper: do batchId and courseId align?
     resolveExamLink(courseId: number, batchId: number) {
       const batchStore = useBatchesStore()
       const courseStore = useCourseStore()
@@ -257,7 +257,7 @@ export const useExamStore = defineStore('exams', {
       return Boolean(batch && course)
     },
 
-    // Student हा exam च्या course+batch शी link आहे का ते validate
+    // Validate that the student belongs to the exam's course + batch
     isStudentLinkedToExam(student: Student, exam: Exam): boolean {
       const batchStore = useBatchesStore()
       const courseStore = useCourseStore()
@@ -332,7 +332,7 @@ export const useExamStore = defineStore('exams', {
       })
     },
 
-    // Seed/demo marks: exams + linked students वरून काही marks तयार करतो
+    // Seed/demo marks: generate sample marks from exams + linked students
     seedMarksForExams(exams: Exam[], count = 21): ExamMark[] {
       const studentStore = useStudentStore()
       const base = nowISO()
@@ -485,7 +485,7 @@ export const useExamStore = defineStore('exams', {
       return updated
     },
 
-    // CRUD: delete exam (marks पण delete)
+    // CRUD: delete exam (and related marks)
     removeExam(id: number): boolean {
       const before = this.exams.length
       this.exams = this.exams.filter((e) => e.id !== id)
@@ -499,7 +499,7 @@ export const useExamStore = defineStore('exams', {
       this.updateExam(id, { status })
     },
 
-    // CRUD: create mark entry (duplicate examId+studentId टाळतो)
+    // CRUD: create mark entry (avoid duplicate examId + studentId)
     createMark(payload: ExamMarkCreateInput): ExamMark | null {
       const exam = this.exams.find((e) => e.id === payload.examId) ?? null
       if (!exam) return null
@@ -585,7 +585,7 @@ export const useExamStore = defineStore('exams', {
       return this.marks.length !== before
     },
 
-    // Reset: seed वर परत
+    // Reset: restore demo seed data
     resetToSeed(count = 21): void {
       this.exams = this.seedExams(count)
       this.marks = this.seedMarksForExams(this.exams, count)

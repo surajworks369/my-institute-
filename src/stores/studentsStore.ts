@@ -1,16 +1,16 @@
 /**
  * `stores/studentsStore.ts` (Students Store)
  *
- * - **कशासाठी**: Students module साठी data (list + CRUD) आणि dropdown options manage करणे.
- * - **Project मधली role**: Students pages (list/add/edit/view) आणि dashboard ला student data पुरवतो.
- * - **Logic प्रकार**:
+ * - **Purpose**: Manage student data (list + CRUD) and dropdown options.
+ * - **Role in project**: Feeds student pages (list/add/edit/view) and the dashboard.
+ * - **Logic type**:
  *   - localStorage persistence (`STORAGE_KEY`)
- *   - initial seed data generation (demo dataset)
- *   - related stores sync (course/batches enrollment counts)
- * - **File प्रकार**: store (frontend)
+ *   - Initial seed/demo dataset
+ *   - Sync related stores (course/batch enrollment counts)
+ * - **File type**: Store (frontend)
  *
- * Note: सध्या हा store Pinia नाही (Vue `reactive` वापरतो) आणि data localStorage मध्ये आहे.
- * पुढे backend/API आल्यावर: load/save API calls, आणि role/permission checks लागू होऊ शकतात.
+ * Note: This module is not Pinia—it uses Vue `reactive`. Data lives in localStorage.
+ * With a backend/API, load/save can become API calls with role/permission checks.
  */
 
 import { reactive } from 'vue'
@@ -23,10 +23,10 @@ import {
 import { useCourseStore } from '@/stores/courseStore'
 import { useBatchesStore } from '@/stores/batchesStore'
 
-// localStorage key: students persistence साठी
+// localStorage key for student persistence
 const STORAGE_KEY = 'vbh_students_v4'
 
-// Master data (dropdown options) – seed generation मध्ये वापरतो
+// Master data (dropdown options) used when seeding
 const cityList = [...MASTER_CITY_LIST]
 
 const maleStudents = [
@@ -88,13 +88,13 @@ function createPhone(id: number) {
   return `9${String(800000000 + id).padStart(9, '0')}`.slice(0, 10)
 }
 
-// Course नुसार default batch name (seed data साठी)
+// Default batch name per course (for seed data)
 function getSeedBatchNameByCourse(courseName: string) {
   const seed = buildMasterBatchSeeds().find((batch) => batch.courseName === courseName)
   return seed?.name ?? `${courseName} - Morning`
 }
 
-// Initial demo dataset: app मध्ये data नसल्यास first time seed म्हणून वापरतो
+// Initial demo dataset used when no data exists yet
 function createSeedStudents(): Student[] {
   const allStudents: Array<{ name: string; gender: 'Male' | 'Female' | 'Other' }> = [
     ...maleStudents.map((name) => ({ name, gender: 'Male' as const })),
@@ -153,7 +153,7 @@ const state = reactive({
 })
 
 export const useStudentStore = () => {
-  // Related stores: enrollment counts maintain करण्यासाठी
+  // Related stores: keep enrollment counts in sync
   const courseStore = useCourseStore()
   const batchesStore = useBatchesStore()
 
@@ -164,19 +164,19 @@ export const useStudentStore = () => {
     syncRelatedStores()
   }
 
-  // Student list बदलल्यावर courses/batches मध्ये enrollment re-calc
+  // Recalculate enrollment on courses/batches when the student list changes
   const syncRelatedStores = () => {
     courseStore.syncEnrollmentFromStudents(state.students)
     batchesStore.syncEnrollmentFromStudents(state.students)
   }
 
-  // UI dropdown: course options (students form/filter साठी)
+  // UI dropdown: course options (forms/filters)
   const getCourseOptions = () => {
     courseStore.init()
     return courseStore.courseNames
   }
 
-  // UI dropdown: course निवडल्यानंतर related batch options
+  // UI dropdown: batch options after a course is selected
   const getBatchOptions = (courseName = '') => {
     batchesStore.init()
     courseStore.init()
@@ -250,7 +250,7 @@ export const useStudentStore = () => {
     return removedStudents
   }
 
-  // Undo/restore: deleted students restore (ids clash टाळतो)
+  // Undo/restore: restore deleted students (avoid id clashes)
   const restoreStudents = (studentsToRestore: Student[]) => {
     if (!studentsToRestore.length) return false
 
@@ -266,12 +266,12 @@ export const useStudentStore = () => {
     return true
   }
 
-  // Lookup helper: id ने student मिळवा
+  // Lookup helper: student by id
   const getStudentById = (id: number) => {
     return state.students.find((student) => student.id === id) ?? null
   }
 
-  // Reset: demo seed वर परत
+  // Reset: restore demo seed data
   const resetStudents = () => {
     const seeded = createSeedStudents()
     state.students.splice(0, state.students.length, ...seeded)

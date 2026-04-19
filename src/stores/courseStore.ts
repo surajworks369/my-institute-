@@ -1,16 +1,16 @@
 /**
  * `stores/courseStore.ts` (Courses Store / Pinia)
  *
- * - **कशासाठी**: Courses module साठी data (list + CRUD) आणि dropdown options (duration/trainers) manage करणे.
- * - **Project मधली role**: Courses pages + students/batches modules ला course reference data देतो.
- * - **Logic प्रकार**:
+ * - **Purpose**: Manage course data (list + CRUD) and dropdown options (duration, trainers).
+ * - **Role in project**: Supplies course reference data to course pages and the students/batches modules.
+ * - **Logic type**:
  *   - localStorage persistence (`STORAGE_KEY`)
- *   - seed course list + stored courses normalize (seed + stored merge)
- *   - enrollment sync (studentsStore मधून counts)
- * - **File प्रकार**: store (frontend / Pinia)
+ *   - Seeded course list + normalize stored courses (merge seed + stored)
+ *   - Sync enrollment counts from students
+ * - **File type**: Store (frontend / Pinia)
  *
- * Note: सध्या course definitions frontend/localStorage मध्ये आहेत. पुढे backend/API आल्यावर
- * `init/add/update/delete` API calls होऊ शकतात, आणि server-side validation लागू होईल.
+ * Note: Course definitions live in the frontend/localStorage today. With a backend/API,
+ * `init` / `add` / `update` / `delete` can become API calls with server-side validation.
  */
 
 import { defineStore } from 'pinia'
@@ -44,7 +44,7 @@ export type CourseFormData = Omit<Course, 'id' | 'enrolledStudents'> & {
 
 const STORAGE_KEY = 'vbh_courses_v4'
 
-// Master dropdown options (forms साठी)
+// Master dropdown options (forms)
 export const durationOptions = [...MASTER_DURATION_OPTIONS]
 export const trainerOptions = [...MASTER_TRAINERS]
 
@@ -238,7 +238,7 @@ function saveToStorage(courses: Course[]) {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(courses))
 }
 
-// Seed courses: master names वरून default course objects बनवतो
+// Seed courses: build default course objects from master names
 function buildSeedCourses(): Course[] {
   return MASTER_COURSE_NAMES.map((courseName, index) => {
     const blueprint = courseBlueprints[courseName] ?? {
@@ -264,7 +264,7 @@ function buildSeedCourses(): Course[] {
   })
 }
 
-// Stored courses ला seed सोबत align/merge (missing seeds add; extra stored keep)
+// Align stored courses with seeds (add missing seeds; keep extra stored rows)
 function normalizeCourses(stored: Course[]): Course[] {
   const seedCourses = buildSeedCourses()
   const seedByName = new Map(seedCourses.map((course) => [course.name, course]))
@@ -304,7 +304,7 @@ export const useCourseStore = defineStore('courseStore', {
   },
 
   actions: {
-    // Init: localStorage/seed based courses load (force=true ने reload)
+    // Init: load courses from localStorage/seed (`force` reloads)
     init(force = false) {
       if (this.loaded && !force) return
       const stored = loadFromStorage()
@@ -313,7 +313,7 @@ export const useCourseStore = defineStore('courseStore', {
       saveToStorage(this.courses)
     },
 
-    // Students बदलल्यावर course-wise enrolledStudents re-calc
+    // Recalculate per-course enrollment when students change
     syncEnrollmentFromStudents(students: Student[]) {
       const counts = students.reduce<Record<string, number>>((acc, student) => {
         acc[student.course] = (acc[student.course] ?? 0) + 1
@@ -354,7 +354,7 @@ export const useCourseStore = defineStore('courseStore', {
       return created
     },
 
-    // CRUD: update course (enrolledStudents current ठेवतो)
+    // CRUD: update course (preserve current enrolledStudents)
     updateCourse(id: number, updated: CourseFormData) {
       const index = this.courses.findIndex((course) => course.id === id)
       if (index === -1) return null
@@ -411,7 +411,7 @@ export const useCourseStore = defineStore('courseStore', {
       return removedCourses
     },
 
-    // Undo/restore: export केलेले courses परत आणणे (name duplicates टाळतो)
+    // Undo/restore: bring back deleted courses (avoid duplicate names)
     restoreCourses(coursesToRestore: Course[]) {
       if (!coursesToRestore.length) return false
 
@@ -429,17 +429,17 @@ export const useCourseStore = defineStore('courseStore', {
       return true
     },
 
-    // Lookup helper: id ने course मिळवा
+    // Lookup helper: course by id
     getCourseById(id: number) {
       return this.courses.find((course) => course.id === id) ?? null
     },
 
-    // Lookup helper: name ने course मिळवा
+    // Lookup helper: course by name
     getCourseByName(name: string) {
       return this.courses.find((course) => course.name === name) ?? null
     },
 
-    // Reset: seed वर परत
+    // Reset: restore demo seed data
     resetCourses() {
       this.courses = buildSeedCourses()
       this.loaded = true

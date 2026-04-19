@@ -1,5 +1,5 @@
 <template>
-  <!-- Register page: auth layout मधल्या right panel मध्ये दिसणारा form -->
+  <!-- Register page: form shown in the auth layout right panel -->
   <div class="center-page">
     <div class="auth-card fade-in">
       <!-- Page heading / guidance -->
@@ -59,12 +59,12 @@
 /**
  * `views/auth/RegisterPage.vue` (Register Page)
  *
- * - **कशासाठी**: नवीन account create करण्यासाठी form देणे.
- * - **Project मधली role**: `/auth/register` route वरून register flow handle होतो.
- * - **Logic प्रकार**: form state (refs) + submit handler + authStore register + router navigation.
- * - **File प्रकार**: view (frontend)
+ * - **Purpose**: Form to create a new account.
+ * - **Role in project**: Handles registration at `/auth/register`.
+ * - **Logic type**: Form state (refs), submit handler, `authStore.register`, router navigation.
+ * - **File type**: View (frontend)
  *
- * Note: सध्या register localStorage-demo users मध्ये save होतं; पुढे backend/API call ने replace होईल.
+ * Note: Registration currently saves demo users in localStorage; replace with a backend API later.
  */
 
 import { ref } from 'vue'
@@ -95,7 +95,7 @@ const handleRegister = (): void => {
     role: 'admin',
   })
 
-  // Register नंतर main app area कडे
+  // After register, enter the main app
   router.push('/dashboard')
 }
 </script>

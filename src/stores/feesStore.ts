@@ -1,18 +1,18 @@
 /**
  * `stores/feesStore.ts` (Fees Store / Pinia - setup style)
  *
- * - **कशासाठी**: Student fee records, installments आणि fee status (Paid/Partial/Pending/Overdue) manage करणे.
- * - **Project मधली role**: Fees pages + dashboard ला fee totals, pending/overdue alerts, recent payments data देतो.
- * - **Logic प्रकार**:
+ * - **Purpose**: Manage student fee records, installments, and status (Paid/Partial/Pending/Overdue).
+ * - **Role in project**: Supplies fee totals, pending/overdue alerts, and recent payments to fee pages and the dashboard.
+ * - **Logic type**:
  *   - localStorage persistence (`STORAGE_KEY`)
- *   - seed fees generation (demo data)
- *   - paid/pending/status calculations
- *   - installments add केल्यावर totals/status recompute
- * - **File प्रकार**: store (frontend / Pinia)
+ *   - Seeded demo fee data
+ *   - Paid/pending/status calculations
+ *   - Recompute totals/status when installments are added
+ * - **File type**: Store (frontend / Pinia)
  *
- * Note: सध्या fees workflow localStorage मध्ये simulate केला आहे. पुढे backend/API आल्यावर:
- * - receipt number generation, payment capture, due/overdue logic server-side होऊ शकते
- * - data size वाढल्यावर aggregates backend reports मधून येतील
+ * Note: The fee workflow is simulated in localStorage today. With a backend/API:
+ * - Receipt numbers, payment capture, and due/overdue logic can move server-side
+ * - Large datasets can use aggregates from backend reports
  */
 
 import { computed, ref } from 'vue'
@@ -22,7 +22,7 @@ import { useCourseStore } from '@/stores/courseStore'
 import { useBatchesStore } from '@/stores/batchesStore'
 import type { Fee, FeeFormInput, FeeInstallment, FeeStatus, PaymentMethod } from '@/types/fee'
 
-// localStorage key: fees persistence साठी
+// localStorage key for fee persistence
 const STORAGE_KEY = 'vbh_fees_v2'
 
 // Timestamp/date helpers
@@ -57,7 +57,7 @@ function saveToStorage(items: Fee[]) {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(items))
 }
 
-// Amount helpers: pending आणि status calculations
+// Amount helpers: pending balance and status
 function calculatePending(totalFees: number, paidAmount: number) {
   return Math.max(Number(totalFees || 0) - Number(paidAmount || 0), 0)
 }
@@ -76,7 +76,7 @@ function calculateStatus(totalFees: number, paidAmount: number, dueDate: string)
   return 'Pending'
 }
 
-// Receipt helpers: UI/print/export साठी unique-ish numbers
+// Receipt helpers: pseudo-unique numbers for UI/print/export
 function generateReceiptNo(id: number) {
   return `VBH-FEE-${String(id).padStart(5, '0')}`
 }
@@ -85,7 +85,7 @@ function createInstallmentReceiptNo(feeId: number, installmentId: number) {
   return `VBH-PAY-${String(feeId).padStart(5, '0')}-${String(installmentId).padStart(3, '0')}`
 }
 
-// Seed/demo: students/courses/batches linkage वापरून काही fee records तयार करतो
+// Seed/demo: build sample fee rows using student/course/batch linkage
 function buildSeedFees(): Fee[] {
   const studentStore = useStudentStore()
   const courseStore = useCourseStore()
@@ -156,7 +156,7 @@ function buildSeedFees(): Fee[] {
   })
 }
 
-// Storage normalize: numbers/date fields safe करणे + status recompute
+// Storage normalize: coerce numeric/date fields and recompute status
 function normalizeFees(stored: Fee[]): Fee[] {
   return stored
     .map((item, index) => {
@@ -211,7 +211,7 @@ export const useFeesStore = defineStore('fees', () => {
     saveToStorage(fees.value)
   }
 
-  // Next id (local list वरून)
+  // Next id from the local list
   function nextId() {
     return fees.value.reduce((max, item) => Math.max(max, item.id), 0) + 1
   }
@@ -330,7 +330,7 @@ export const useFeesStore = defineStore('fees', () => {
     return removed
   }
 
-  // Undo/restore: backup items restore (id clash टाळतो)
+  // Undo/restore: restore backup rows (avoid id clashes)
   function restoreMany(items: Fee[]) {
     if (!items.length) return false
 

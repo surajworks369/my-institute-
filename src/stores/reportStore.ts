@@ -1,16 +1,16 @@
 /**
  * `stores/reportStore.ts` (Reports Store / Pinia - computed reports)
  *
- * - **कशासाठी**: Students/Attendance/Exams/Fees यांचे report rows आणि filtering logic तयार करणे.
- * - **Project मधली role**: Reports pages ला unified report data, filters आणि summary metrics provide करते.
- * - **Logic प्रकार**:
- *   - विविध stores मधून data join करून report rows बनवणे
- *   - search/date/status/paymentMethod based filtering
- *   - report summary (counts + totals) compute करणे
- * - **File प्रकार**: store (frontend / Pinia)
+ * - **Purpose**: Build report rows and filtering logic for students, attendance, exams, and fees.
+ * - **Role in project**: Provides unified report data, filters, and summary metrics to report pages.
+ * - **Logic type**:
+ *   - Join data from multiple stores into report rows
+ *   - Filter by search, date, status, payment method
+ *   - Compute report summaries (counts + totals)
+ * - **File type**: Store (frontend / Pinia)
  *
- * Note: सध्या reports पूर्ण frontend computed आहेत. पुढे backend/API आल्यावर heavy reports
- * server-side तयार होऊन pagination/export endpoints मधून येऊ शकतात.
+ * Note: Reports are fully computed on the frontend today. Heavy reports can move server-side
+ * with pagination/export endpoints when a backend exists.
  */
 
 import { computed } from 'vue'
@@ -31,14 +31,14 @@ import type {
   StudentReportRow,
 } from '@/types/report'
 
-// Date filter helper: from/to range मध्ये आहे का?
+// Date filter helper: is value within from/to range?
 function inDateRange(date: string, fromDate?: string, toDate?: string): boolean {
   if (fromDate && date < fromDate) return false
   if (toDate && date > toDate) return false
   return true
 }
 
-// Search helper: अनेक fields मध्ये query match शोधतो
+// Search helper: match query across multiple fields
 function matchesSearch(values: Array<string | number | undefined>, query?: string): boolean {
   if (!query || !query.trim()) return true
   const q = query.trim().toLowerCase()
@@ -50,7 +50,7 @@ function matchesSearch(values: Array<string | number | undefined>, query?: strin
 }
 
 export const useReportStore = defineStore('reports', () => {
-  // Dependent stores: report rows तयार करण्यासाठी source data
+  // Dependent stores: source data for building report rows
   const studentStore = useStudentStore()
   const courseStore = useCourseStore()
   const batchStore = useBatchesStore()
@@ -58,7 +58,7 @@ export const useReportStore = defineStore('reports', () => {
   const examStore = useExamStore()
   const feesStore = useFeesStore()
 
-  // Init: सर्व dependent stores init (localStorage/demo seed load)
+  // Init: load all dependent stores (localStorage / demo seed)
   function init() {
     studentStore.init()
     courseStore.init()
@@ -68,7 +68,7 @@ export const useReportStore = defineStore('reports', () => {
     feesStore.init()
   }
 
-  // Base report rows (unfiltered) – UI filters नंतर apply होतात
+  // Base report rows (unfiltered); UI filters apply on top
   const studentReports = computed<StudentReportRow[]>(() => {
     return studentStore.students.map((student) => {
       const course = courseStore.getCourseByName(student.course)
@@ -327,7 +327,7 @@ export const useReportStore = defineStore('reports', () => {
     })
   }
 
-  // Summary widget: reports dashboard वर quick overview
+  // Summary widget: quick overview on the reports dashboard
   const summary = computed<ReportSummary>(() => {
     const totalStudents = studentReports.value.length
     const activeStudents = studentReports.value.filter((x) => x.status === 'Active').length
@@ -382,7 +382,7 @@ export const useReportStore = defineStore('reports', () => {
     }
   })
 
-  // Filters dropdown options (UI साठी)
+  // Filter dropdown options (UI)
   const studentStatuses = computed(() => ['Active', 'Inactive'])
   const attendanceStatuses = computed(() => ['Present', 'Absent', 'Late', 'Leave'])
   const examStatuses = computed(() => ['Pass', 'Fail'])

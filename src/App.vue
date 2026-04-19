@@ -1,5 +1,5 @@
 <template>
-  <!-- Root outlet: router नुसार current page इथे render होते -->
+  <!-- Root outlet: current route renders here -->
   <router-view />
 </template>
 
@@ -7,15 +7,15 @@
 /**
  * `App.vue` (Root Component Shell)
  *
- * - **कशासाठी**: पूर्ण app साठी root container म्हणून काम करणे.
- * - **Project मधली role**: Router चा main outlet (`<router-view />`) provide करते.
- * - **Logic प्रकार**: सध्या minimal shell; पुढे global layout control / providers इथे येऊ शकतात.
- * - **File प्रकार**: frontend (root component)
+ * - **Purpose**: Root container for the entire app.
+ * - **Role in project**: Provides the main router outlet (`<router-view />`).
+ * - **Logic type**: Minimal shell for now; global layout control or providers can live here later.
+ * - **File type**: Frontend (root component)
  */
 
-// सध्या इथे business logic नाही; routes बदलल्यावर pages/layouts स्वतः render होतात
+// No business logic here; pages/layouts render based on the active route
 </script>
 
 <style>
-/* App level styling इथे टाकू शकतो (rare case) */
+/* App-level styling can go here (rare) */
 </style>

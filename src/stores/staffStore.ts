@@ -1,16 +1,16 @@
 /**
  * `stores/staffStore.ts` (Staff Store / Pinia)
  *
- * - **कशासाठी**: Staff records (list + CRUD) आणि staff related dropdown options manage करणे.
- * - **Project मधली role**: Staff pages + dashboard ला staff counts (active/on-leave) आणि summary data मिळतो.
- * - **Logic प्रकार**:
+ * - **Purpose**: Manage staff records (list + CRUD) and dropdown options.
+ * - **Role in project**: Feeds staff pages and the dashboard with counts (active/on-leave) and summaries.
+ * - **Logic type**:
  *   - localStorage persistence (`STORAGE_KEY`)
- *   - seed staff generation (demo dataset)
- *   - normalize: stored fields safe करणे (role/status/gender)
- * - **File प्रकार**: store (frontend / Pinia)
+ *   - Seeded demo staff data
+ *   - Normalize stored fields safely (role/status/gender)
+ * - **File type**: Store (frontend / Pinia)
  *
- * Note: सध्या staff master data frontend/localStorage मध्ये आहे. पुढे backend/API आल्यावर
- * unique staffCode/email validation server-side enforce होईल.
+ * Note: Staff master data lives in the frontend/localStorage today. With a backend/API,
+ * unique staff code/email validation can be enforced server-side.
  */
 
 import { defineStore } from 'pinia'
@@ -29,7 +29,7 @@ import {
   MASTER_EMPLOYMENT_STATUSES,
 } from '@/stores/erpMasterData'
 
-// localStorage key: staff persistence साठी
+// localStorage key for staff persistence
 const STORAGE_KEY = 'vbh_erp_staff_v3'
 
 // Timestamp helper
@@ -54,7 +54,7 @@ function saveToStorage(items: Staff[]): void {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(items))
 }
 
-// Dropdown options (forms/filters साठी)
+// Dropdown options (forms / filters)
 export const staffRoleOptions: StaffRole[] = [
   'Admin',
   'Teacher',
@@ -126,7 +126,7 @@ const seedAddresses = [
   'Near Railway Station',
 ] as const
 
-// Normalize helpers: unknown value आल्यास default घ्या
+// Normalize helpers: fall back to defaults for unknown values
 function normalizeRole(role: unknown): StaffRole {
   return staffRoleOptions.includes(role as StaffRole) ? (role as StaffRole) : 'Teacher'
 }
@@ -190,7 +190,7 @@ function seedData(count = 21): Staff[] {
   })
 }
 
-// Storage normalize: types/strings safe करणे + mandatory fields check
+// Storage normalize: coerce types/strings and validate required fields
 function normalizeItems(items: Staff[]): Staff[] {
   return items
     .map(
@@ -341,7 +341,7 @@ export const useStaffStore = defineStore('staff', {
       return removed
     },
 
-    // Undo/restore: backup records restore (id clash टाळतो)
+    // Undo/restore: restore backup records (avoid id clashes)
     restoreMany(records: Staff[]): boolean {
       if (!records.length) return false
 
@@ -354,7 +354,7 @@ export const useStaffStore = defineStore('staff', {
       return true
     },
 
-    // Reset: seed वर परत
+    // Reset: restore demo seed data
     resetToSeed(count = 21): void {
       this.items = seedData(count)
       this.loaded = true

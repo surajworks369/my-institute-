@@ -1,5 +1,5 @@
 <template>
-  <!-- Login page: auth layout मधल्या right panel मध्ये दिसणारा form -->
+  <!-- Login page: form shown in the auth layout right panel -->
   <div class="center-page">
     <div class="auth-card fade-in">
       <!-- Page heading / guidance -->
@@ -48,12 +48,12 @@
 /**
  * `views/auth/LoginPage.vue` (Login Page)
  *
- * - **कशासाठी**: User login form देणे आणि successful login नंतर dashboard ला नेणे.
- * - **Project मधली role**: `/auth/login` route वरून auth flow सुरू होतो.
- * - **Logic प्रकार**: form state (refs) + submit handler + authStore login + router navigation.
- * - **File प्रकार**: view (frontend)
+ * - **Purpose**: Login form and redirect to the dashboard after success.
+ * - **Role in project**: Entry point for auth at `/auth/login`.
+ * - **Logic type**: Form state (refs), submit handler, `authStore.login`, router navigation.
+ * - **File type**: View (frontend)
  *
- * Note: सध्या login verification localStorage-demo users वर आहे; पुढे backend/API call ने replace होईल.
+ * Note: Login currently checks localStorage demo users; replace with a backend API call later.
  */
 
 import { ref, onMounted } from 'vue'
@@ -69,11 +69,11 @@ const authStore = useAuthStore()
 const email = ref<string>('')
 const password = ref<string>('')
 
-// Page load: reload नंतर store initialize; आधीच login असेल तर dashboard ला direct
+// On load: initialize store; if already logged in, go straight to the dashboard
 onMounted(() => {
   authStore.initialize()
 
-  // 👉 already login असेल तर direct dashboard
+  // Already authenticated — skip login
   if (authStore.isAuthenticated) {
     router.replace('/dashboard')
   }
@@ -89,7 +89,7 @@ const handleLogin = (): void => {
   const success: boolean = authStore.login(email.value, password.value)
 
   if (success) {
-    // replace: back केल्यावर login page परत येऊ नये म्हणून
+    // Use replace so the back button does not return to login
     router.replace('/dashboard')
   } else {
     alert('Invalid email or password')

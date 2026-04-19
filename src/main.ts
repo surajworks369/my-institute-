@@ -1,10 +1,10 @@
 /**
  * `main.ts` (App Bootstrap / Entry)
  *
- * - **कशासाठी**: Vue app create करून plugins (Pinia, Router) attach करणे आणि app mount करणे.
- * - **Project मधली role**: पूर्ण frontend app सुरू होण्याचा entry point.
- * - **Logic प्रकार**: app initialization + global CSS load.
- * - **File प्रकार**: frontend entry
+ * - **Purpose**: Create the Vue app, attach plugins (Pinia, Router), and mount the app.
+ * - **Role in project**: Entry point for the entire frontend application.
+ * - **Logic type**: App initialization + global CSS load.
+ * - **File type**: Frontend entry
  */
 
 import { createApp } from 'vue'
@@ -28,5 +28,5 @@ app.use(pinia)
 // Router setup (navigation + route views)
 app.use(router)
 
-// App mount (index.html मधल्या #app मध्ये render)
+// App mount (render into `#app` from index.html)
 app.mount('#app')

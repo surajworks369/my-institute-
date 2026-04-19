@@ -1,17 +1,17 @@
 /**
  * `stores/batchesStore.ts` (Batches Store / Pinia)
  *
- * - **कशासाठी**: Batches module साठी data (list + CRUD) आणि derived stats (active/total/enrolled) manage करणे.
- * - **Project मधली role**: Batches pages + attendance/students/dashboard ला batch reference data देतो.
- * - **Logic प्रकार**:
+ * - **Purpose**: Manage batch data (list + CRUD) and derived stats (active/total/enrolled).
+ * - **Role in project**: Provides batch reference data to batch pages, attendance, students, and the dashboard.
+ * - **Logic type**:
  *   - localStorage persistence (`STORAGE_KEY`)
- *   - seed batches generation (master seeds + courses linkage)
- *   - normalize: seed + stored merge
- *   - enrollment sync (students list वरून batch-wise counts)
- * - **File प्रकार**: store (frontend / Pinia)
+ *   - Seeded batches (master seeds + course linkage)
+ *   - Normalize by merging seed + stored rows
+ *   - Sync enrollment counts from the student list
+ * - **File type**: Store (frontend / Pinia)
  *
- * Note: सध्या batches frontend/localStorage मध्ये आहेत. पुढे backend/API आल्यावर CRUD server-side होईल
- * आणि `courseId` validation backend वर enforce होऊ शकते.
+ * Note: Batches live in the frontend/localStorage today. With a backend/API, CRUD can move server-side
+ * and `courseId` validation can be enforced there.
  */
 
 import { defineStore } from 'pinia'
@@ -20,10 +20,10 @@ import type { Student } from '@/types/student'
 import { buildMasterBatchSeeds } from '@/stores/erpMasterData'
 import { useCourseStore } from '@/stores/courseStore'
 
-// localStorage key: batches persistence साठी
+// localStorage key for batch persistence
 const STORAGE_KEY = 'vbh_erp_batches_v3'
 
-// Timestamp helper (createdAt/updatedAt साठी)
+// Timestamp helper (createdAt/updatedAt)
 function nowISO(): string {
   return new Date().toISOString()
 }
@@ -45,7 +45,7 @@ function saveToStorage(batches: Batch[]): void {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(batches))
 }
 
-// Seed data: master batch seeds + courseStore मधून courseId resolve
+// Seed data: master batch seeds + resolve courseId via courseStore
 function seedData(): Batch[] {
   const courseStore = useCourseStore()
   courseStore.init()
@@ -77,7 +77,7 @@ function seedData(): Batch[] {
   })
 }
 
-// Stored batches ला seed सोबत align/merge (missing seeds add; extra stored keep)
+// Align stored batches with seeds (add missing seeds; keep extra stored rows)
 function normalizeStoredBatches(stored: Batch[]): Batch[] {
   const seeded = seedData()
   if (!stored.length) return seeded
@@ -125,7 +125,7 @@ export const useBatchesStore = defineStore('batches', {
   },
 
   actions: {
-    // Init: localStorage/seed based batches load (force=true ने reload)
+    // Init: load batches from localStorage/seed (`force` reloads)
     init(force = false): void {
       if (this.loaded && !force) return
 
@@ -135,7 +135,7 @@ export const useBatchesStore = defineStore('batches', {
       saveToStorage(this.batches)
     },
 
-    // Students बदलल्यावर batch-wise enrolled counts re-calc
+    // Recalculate per-batch enrollment when students change
     syncEnrollmentFromStudents(students: Student[]) {
       const counts = students.reduce<Record<string, number>>((acc, student) => {
         acc[student.batch] = (acc[student.batch] ?? 0) + 1
@@ -218,7 +218,7 @@ export const useBatchesStore = defineStore('batches', {
       this.update(id, { status })
     },
 
-    // Reset: seed वर परत
+    // Reset: restore demo seed data
     resetToSeed() {
       this.batches = seedData()
       this.loaded = true

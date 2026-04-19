@@ -1,17 +1,17 @@
 /**
  * `stores/attendanceStore.ts` (Attendance Store / Pinia)
  *
- * - **कशासाठी**: Attendance records (mark/edit/delete) manage करणे आणि counts/distribution provide करणे.
- * - **Project मधली role**: Attendance pages + dashboard ला attendance data आणि summary मिळते.
- * - **Logic प्रकार**:
+ * - **Purpose**: Manage attendance records (mark/edit/delete) and expose counts/distributions.
+ * - **Role in project**: Feeds attendance pages and the dashboard with rows and summaries.
+ * - **Logic type**:
  *   - localStorage persistence (`STORAGE_KEY`)
- *   - records normalize (student/course/batch linkage validate)
- *   - seed records generation (demo data)
- *   - create/update वेळी duplicate entry (date+batch+student) टाळणे
- * - **File प्रकार**: store (frontend / Pinia)
+ *   - Normalize records (validate student/course/batch linkage)
+ *   - Seeded demo data
+ *   - Prevent duplicate rows (date + batch + student) on create/update
+ * - **File type**: Store (frontend / Pinia)
  *
- * Note: सध्या linkage validation पूर्णपणे frontend वर आहे. पुढे backend/API आल्यावर
- * duplicates/constraints server-side enforce होतील आणि init/create/update API calls होतील.
+ * Note: Linkage validation is client-only today. With a backend/API, uniqueness constraints and
+ * init/create/update can move to API calls.
  */
 
 import { defineStore } from 'pinia'
@@ -26,15 +26,15 @@ import { useBatchesStore } from '@/stores/batchesStore'
 import { useCourseStore } from '@/stores/courseStore'
 import { useStudentStore } from '@/stores/studentsStore'
 
-// localStorage key: attendance persistence साठी
+// localStorage key for attendance persistence
 const STORAGE_KEY = 'vbh_erp_attendance_v3'
 
-// Timestamp helper (createdAt/updatedAt साठी)
+// Timestamp helper (createdAt/updatedAt)
 function nowISO(): string {
   return new Date().toISOString()
 }
 
-// Date helpers: UI filters/unique keys साठी YYYY-MM-DD normalize
+// Date helpers: normalize to YYYY-MM-DD for filters and unique keys
 function toYMD(date: Date): string {
   const y = date.getFullYear()
   const m = String(date.getMonth() + 1).padStart(2, '0')
@@ -46,7 +46,7 @@ function todayYMD(): string {
   return toYMD(new Date())
 }
 
-// Seed/demo purposes: आजपासून मागे N दिवस shift करून date बनवतो
+// Seed/demo: shift a base date back by N days
 function shiftDate(base: string, days: number): string {
   const dt = new Date(base)
   dt.setDate(dt.getDate() - days)
@@ -70,7 +70,7 @@ function saveToStorage(items: Attendance[]): void {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(items))
 }
 
-// Unique constraint key: (date + batchId + studentId) एकदाच allowed
+// Unique key: only one row per date + batchId + studentId
 function uniqueKey(date: string, batchId: number, studentId: number): string {
   return `${date}__${batchId}__${studentId}`
 }
@@ -128,9 +128,9 @@ export const useAttendanceStore = defineStore('attendance', {
     },
 
     // Stored records normalize:
-    // - student अस्तित्वात आहे का तपासा
-    // - course/batch resolve करा (id किंवा student data वरून)
-    // - duplicate entries drop करा
+    // - Ensure the student exists
+    // - Resolve course/batch (by id or student data)
+    // - Drop duplicate entries
     normalizeRecords(records: Attendance[]): Attendance[] {
       const courseStore = useCourseStore()
       const batchStore = useBatchesStore()
@@ -187,7 +187,7 @@ export const useAttendanceStore = defineStore('attendance', {
         })
     },
 
-    // UI forms साठी helper: selected studentId वरून linked course/batch resolve
+    // UI helper: resolve linked course/batch from a selected studentId
     getLinkedData(studentId: number, courseId?: number, batchId?: number) {
       const courseStore = useCourseStore()
       const batchStore = useBatchesStore()
@@ -221,7 +221,7 @@ export const useAttendanceStore = defineStore('attendance', {
       }
     },
 
-    // Create/update वेळी student-course-batch mismatch टाळण्यासाठी validation
+    // Validate selections to avoid student/course/batch mismatches on create/update
     validateLinkedSelection(payload: {
       studentId: number
       courseId: number
@@ -241,7 +241,7 @@ export const useAttendanceStore = defineStore('attendance', {
       return true
     },
 
-    // Duplicate entry check: same date+batch+student (excludeId update साठी)
+    // Duplicate check: same date + batch + student (`excludeId` for updates)
     hasEntry(date: string, batchId: number, studentId: number, excludeId = 0): boolean {
       const key = uniqueKey(date, batchId, studentId)
       return this.items.some(
@@ -249,7 +249,7 @@ export const useAttendanceStore = defineStore('attendance', {
       )
     },
 
-    // Seed/demo records: students list वरून काही entries तयार करतो
+    // Seed/demo: build sample rows from the student list
     seed(count?: number): Attendance[] {
       const studentStore = useStudentStore()
       const courseStore = useCourseStore()
@@ -410,7 +410,7 @@ export const useAttendanceStore = defineStore('attendance', {
       return removed
     },
 
-    // Undo/restore: backup records restore (id/key clash टाळतो)
+    // Undo/restore: restore backup rows (avoid id/key clashes)
     restoreMany(records: Attendance[]): boolean {
       if (!records.length) return false
 
@@ -437,7 +437,7 @@ export const useAttendanceStore = defineStore('attendance', {
       return true
     },
 
-    // Reset: seed वर परत
+    // Reset: restore demo seed data
     resetToSeed(count?: number): void {
       this.items = this.seed(count)
       this.loaded = true

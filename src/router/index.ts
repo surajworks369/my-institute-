@@ -1,11 +1,11 @@
 /**
  * router/index.ts
  *
- * काम:
- * - app मधील सर्व routes define करणे
- * - public आणि protected pages वेगळे handle करणे
- * - login check करणे
- * - page title बदलणे
+ * Responsibilities:
+ * - Define all application routes
+ * - Separate public vs protected pages
+ * - Run login checks
+ * - Update the document title per route
  */
 
 import { createRouter, createWebHashHistory, type RouteRecordRaw } from 'vue-router'
@@ -328,16 +328,16 @@ const router = createRouter({
 router.beforeEach((to, _from, next) => {
   const authStore = useAuthStore()
 
-  // reload नंतर auth state पुन्हा localStorage मधून घेते
+  // Rehydrate auth from localStorage after reload
   authStore.initialize()
 
-  // protected page असेल आणि login नसेल तर login page वर पाठवायचे
+  // Protected route without login — send user to login
   if (to.meta.requiresAuth && !authStore.isAuthenticated) {
     next('/auth/login')
     return
   }
 
-  // login झालेला user पुन्हा login/register वर गेला तर dashboard ला पाठवायचे
+  // Logged-in user hitting login/register again — redirect to dashboard
   if (authStore.isAuthenticated && (to.path === '/auth/login' || to.path === '/auth/register')) {
     next('/dashboard')
     return

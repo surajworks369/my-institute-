@@ -1,15 +1,15 @@
 /**
  * `stores/settingsStore.ts` (Settings Store / Pinia)
  *
- * - **कशासाठी**: Institute/Academic/Fees/System settings state manage करणे (forms साठी).
- * - **Project मधली role**: Settings pages मध्ये inputs bind करून preferences persist करतो.
- * - **Logic प्रकार**:
+ * - **Purpose**: Manage institute/academic/fees/system settings state for forms.
+ * - **Role in project**: Binds inputs on settings pages and persists preferences.
+ * - **Logic type**:
  *   - localStorage persistence (`STORAGE_KEY`)
- *   - defaultSettings वर merge (partial saved settings सुद्धा safe)
- * - **File प्रकार**: store (frontend / Pinia)
+ *   - Merge into `defaultSettings` (partial saves stay safe)
+ * - **File type**: Store (frontend / Pinia)
  *
- * Note: सध्या settings localStorage मध्ये आहेत. पुढे multi-user backend आल्यावर
- * settings per-institute/per-user API ने load/save होतील.
+ * Note: Settings live in localStorage today. With a multi-user backend, load/save can move to
+ * per-institute or per-user APIs.
  */
 
 import { defineStore } from 'pinia'
@@ -22,10 +22,10 @@ import type {
 } from '@/types/settings'
 import { defaultSettings } from '@/types/settings'
 
-// localStorage key: settings persistence साठी
+// localStorage key for settings persistence
 const STORAGE_KEY = 'vbh_settings_v1'
 
-// localStorage → settings load (defaultSettings merge सह)
+// Load settings from localStorage merged with defaults
 function loadSettings(): SettingsState {
   try {
     const raw = localStorage.getItem(STORAGE_KEY)
@@ -78,7 +78,7 @@ export const useSettingsStore = defineStore('settings', {
   },
 
   actions: {
-    // Init: storage मधून state hydrate (एकदाच)
+    // Init: hydrate state from storage once
     init() {
       if (this.loaded) return
 
@@ -116,7 +116,7 @@ export const useSettingsStore = defineStore('settings', {
       this.persist()
     },
 
-    // Reset: सर्व settings default वर
+    // Reset: restore all settings to defaults
     resetAll() {
       const defaults = structuredClone(defaultSettings)
 

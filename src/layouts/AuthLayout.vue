@@ -1,7 +1,7 @@
 <template>
-  <!-- Auth layout shell: left info panel + right side वर auth pages render -->
+  <!-- Auth layout: left info panel + auth pages on the right -->
   <div class="auth-layout">
-    <!-- Branding/marketing panel (login/register user ला context देण्यासाठी) -->
+    <!-- Branding / marketing panel for login and register -->
     <div class="auth-left">
       <div class="auth-left-content">
         <h1>🎓 Institute ERP</h1>
@@ -12,7 +12,7 @@
       </div>
     </div>
 
-    <!-- Auth pages outlet: `/auth/login` आणि `/auth/register` इथे render होतात -->
+    <!-- Auth pages outlet: `/auth/login` and `/auth/register` render here -->
     <div class="auth-right">
       <router-view />
     </div>
@@ -23,10 +23,10 @@
 /**
  * `layouts/AuthLayout.vue` (Auth Layout)
  *
- * - **कशासाठी**: Login/Register सारख्या auth pages साठी common layout provide करणे.
- * - **Project मधली role**: `/auth/*` routes साठी wrapper—left info + right form area.
- * - **Logic प्रकार**: UI layout only (इथे business logic नाही).
- * - **File प्रकार**: layout (frontend)
+ * - **Purpose**: Shared layout for authentication pages (login/register).
+ * - **Role in project**: Wrapper for `/auth/*` routes—left info panel + right-hand form area.
+ * - **Logic type**: Layout only (no business logic here).
+ * - **File type**: Layout (frontend)
  */
 </script>
 
@@ -106,7 +106,7 @@
   background: linear-gradient(180deg, #f8fafc 0%, #eef2f7 100%);
 }
 
-/* Responsive: छोटे screens वर left/right stack */
+/* Responsive: stack left/right on small screens */
 @media (max-width: 1100px) {
   .auth-layout {
     flex-direction: column;

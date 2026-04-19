@@ -1,14 +1,14 @@
 /**
  * `services/studentService.ts` (Student Service - localStorage CRUD)
  *
- * - **कशासाठी**: Students ची basic CRUD operations localStorage वरून करणे.
- * - **Project मधली role**: जर UI/Store मध्ये service pattern वापरला तर data access layer म्हणून उपयोग.
- * - **Logic प्रकार**: localStorage list read/write (simple persistence).
- * - **File प्रकार**: service (frontend)
+ * - **Purpose**: Basic student CRUD backed by localStorage.
+ * - **Role in project**: Data access layer if views/stores use this service pattern.
+ * - **Logic type**: Read/write a student list in localStorage.
+ * - **File type**: Service (frontend)
  *
- * Note: सध्या हा service localStorage वापरतो. पुढे backend/API आल्यावर:
- * - `getStudents/add/update/delete` → HTTP API calls होतील
- * - pagination/search server-side होऊ शकते
+ * Note: Uses localStorage today. With a backend/API:
+ * - `getStudents` / `add` / `update` / `delete` become HTTP calls
+ * - Pagination and search can move server-side
  */
 
 import type { Student } from '../types/student'

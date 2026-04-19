@@ -1,18 +1,18 @@
 /**
  * `authGuard.ts` (Router Guard)
  *
- * - **कशासाठी**: Protected routes वर जाण्यापूर्वी user login आहे का ते तपासण्यासाठी.
- * - **Project मधली role**: Vue Router navigation मध्ये auth based redirect handle करते.
- * - **Logic प्रकार**: localStorage मधील token → Pinia authStore sync + route `meta.requiresAuth` वर access control.
- * - **File प्रकार**: router (frontend)
+ * - **Purpose**: Check whether the user is logged in before entering protected routes.
+ * - **Role in project**: Handles auth-based redirects during Vue Router navigation.
+ * - **Logic type**: Sync token from localStorage to Pinia `authStore` + access control via route `meta.requiresAuth`.
+ * - **File type**: Router (frontend)
  *
- * Note: सध्या auth state localStorage/token वर आधारलेली आहे; पुढे backend/API (session/JWT verify) आल्यावर
- * हा check server-side verify / refresh-token flow ने replace होऊ शकतो.
+ * Note: Auth state is currently driven by localStorage/token. When a backend/API (session/JWT verify)
+ * is added, this check can be replaced with server-side verification or a refresh-token flow.
  */
 
-// Router types (navigation guard signature साठी)
+// Router types (navigation guard signature)
 import type { NavigationGuardNext, RouteLocationNormalized } from 'vue-router'
-// Pinia auth store (login state आणि token sync करण्यासाठी)
+// Pinia auth store (login state and token sync)
 import { useAuthStore } from '@/stores/authStore'
 
 export function authGuard(
@@ -20,19 +20,19 @@ export function authGuard(
   from: RouteLocationNormalized,
   next: NavigationGuardNext,
 ) {
-  // प्रत्येक navigation वेळी auth state मिळवण्यासाठी store instance
+  // Resolve auth state on each navigation
   const authStore = useAuthStore()
 
-  // Page reload नंतर store reset होऊ शकतो; म्हणून localStorage मधून token वाचून store मध्ये set करतो
+  // After reload the store may reset; read token from localStorage and hydrate the store
   const token = localStorage.getItem('token')
 
-  // localStorage मध्ये token आहे पण store मध्ये authenticated flag set नाहीये → storage वरून state restore
+  // Token exists in localStorage but the store is not marked authenticated — restore from storage
   if (token && !authStore.isAuthenticated) {
     authStore.setAuthFromStorage(token)
   }
 
-  // `to.meta.requiresAuth` असलेला route = protected route
-  // User unauthenticated असेल तर login page ला redirect; नाहीतर navigation continue
+  // `to.meta.requiresAuth` marks a protected route
+  // Redirect unauthenticated users to login; otherwise continue navigation
   if (to.meta.requiresAuth && !authStore.isAuthenticated) {
     next('/auth/login')
   } else {

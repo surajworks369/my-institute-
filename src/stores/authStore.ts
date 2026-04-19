@@ -1,23 +1,23 @@
 /**
  * `stores/authStore.ts` (Pinia Auth Store)
  *
- * - **कशासाठी**: Login/Register/Logout आणि user session state (authenticated/user/token) manage करणे.
- * - **Project मधली role**: Router guards + auth pages ला login status आणि current user माहिती provide करते.
- * - **Logic प्रकार**: In-memory state + localStorage persistence (reload नंतर restore).
- * - **File प्रकार**: store (frontend / Pinia)
+ * - **Purpose**: Manage login/register/logout and session state (authenticated, user, token).
+ * - **Role in project**: Supplies login status and current user to router guards and auth views.
+ * - **Logic type**: In-memory state + localStorage persistence (restore after reload).
+ * - **File type**: Store (frontend / Pinia)
  *
- * Note: सध्या register/login localStorage वर simulate केलेलं आहे. पुढे backend/API आल्यानंतर:
- * - users list localStorage ऐवजी API/database मधून येईल
- * - token generation/validation backend कडे जाईल
- * - `initialize()` मध्ये token verify/refresh call येऊ शकतो
+ * Note: Register/login currently simulate persistence in localStorage. With a backend/API:
+ * - User list would come from an API/database instead of localStorage
+ * - Token generation/validation would move to the server
+ * - `initialize()` could call token verify/refresh endpoints
  */
 
 import { defineStore } from 'pinia'
 
-// User role types (UI/permissions साठी उपयोग होऊ शकतो)
+// User roles (for UI / permissions)
 export type UserRole = 'admin' | 'staff' | 'student'
 
-// App मध्ये वापरला जाणारा user data shape
+// User record shape used across the app
 export interface User {
   name: string
   email: string
@@ -43,18 +43,18 @@ export const useAuthStore = defineStore('auth', {
   }),
 
   actions: {
-    // App start / route change वेळी localStorage मधून state restore करण्यासाठी
+    // Restore state from localStorage on app start / route changes
     initialize() {
       const savedUser = localStorage.getItem('currentUser')
       const token = localStorage.getItem('token')
       const users = localStorage.getItem('users')
 
-      // Stored users list restore (register/login demo साठी)
+      // Restore stored user list (register/login demo)
       if (users) {
         this.users = JSON.parse(users)
       }
 
-      // Reload नंतर login session restore (token + currentUser असल्यास authenticated true)
+      // Restore session after reload when both token and currentUser exist
       if (savedUser && token) {
         this.currentUser = JSON.parse(savedUser)
         this.token = token
@@ -62,22 +62,22 @@ export const useAuthStore = defineStore('auth', {
       }
     },
 
-    // नवीन user register करणे (सध्या localStorage demo; पुढे API call होऊ शकतो)
+    // Register a new user (localStorage demo for now; replace with API later)
     register(user: User) {
       this.users.push(user)
       this.currentUser = user
       this.isAuthenticated = true
 
-      // Frontend-side token generation (demo). Real app मध्ये backend token देईल.
+      // Frontend-only token (demo). A real app would receive a token from the backend.
       this.token = 'token-' + Date.now()
 
-      // Persist: users + current session (reload नंतर restore साठी)
+      // Persist users + session for reload
       localStorage.setItem('users', JSON.stringify(this.users))
       localStorage.setItem('currentUser', JSON.stringify(user))
       localStorage.setItem('token', this.token)
     },
 
-    // Login attempt: stored users मधून match करून session set करतो
+    // Login: match against stored users and set session
     login(email: string, password: string): boolean {
       const foundUser = this.users.find((u) => u.email === email && u.password === password)
 
@@ -85,7 +85,7 @@ export const useAuthStore = defineStore('auth', {
         this.currentUser = foundUser
         this.isAuthenticated = true
 
-        // Frontend-side token generation (demo). Real app मध्ये backend verify करून token देईल.
+        // Frontend-only token (demo). Real app: backend verifies credentials and issues a token.
         this.token = 'token-' + Date.now()
 
         // Persist: current session
@@ -108,7 +108,7 @@ export const useAuthStore = defineStore('auth', {
       localStorage.removeItem('token')
     },
 
-    // Router guard usage: token storage मधून आल्यावर store state restore करण्यासाठी helper
+    // Used by router guard: hydrate store when a token exists in storage
     setAuthFromStorage(token: string) {
       const savedUser = localStorage.getItem('currentUser')
 

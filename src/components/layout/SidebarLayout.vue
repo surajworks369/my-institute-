@@ -10,7 +10,7 @@
       </div>
 
       <div class="header-actions">
-        <!-- Desktop मध्ये collapse/expand toggle -->
+        <!-- Desktop: collapse / expand toggle -->
         <button
           v-if="!isMobile"
           class="toggle-btn"
@@ -21,7 +21,7 @@
           {{ collapsed ? '➡' : '⬅' }}
         </button>
 
-        <!-- Mobile मध्ये sidebar बंद करण्याचा button -->
+        <!-- Mobile: close sidebar button -->
         <button
           v-if="isMobile"
           class="toggle-btn"
@@ -35,9 +35,9 @@
     </div>
 
     <div class="sidebar-menu-scroll">
-      <!-- मुख्य navigation menu -->
+      <!-- Main navigation menu -->
       <nav class="menu">
-        <!-- Dashboard: नेहमी visible असलेला link -->
+        <!-- Dashboard: always visible -->
         <RouterLink
           to="/dashboard"
           class="menu-item"
@@ -160,7 +160,7 @@
           </transition>
         </div>
 
-        <!-- Administration group: फक्त admin role साठी visible (Staff / Settings) -->
+        <!-- Administration group: visible for admin role only (Staff / Settings) -->
         <div v-if="role === 'admin'" class="menu-group">
           <div
             class="menu-title"
@@ -212,12 +212,12 @@
 /**
  * `components/layout/SidebarLayout.vue` (Sidebar Navigation)
  *
- * - **कशासाठी**: Dashboard, Academic, Finance, Administration सारखे मुख्य sections मधे नेव्हिगेशन देणे.
- * - **Project मधली role**: Main layout मध्ये app-wide sidebar म्हणून वापरला जातो.
- * - **Logic प्रकार**: Responsive sidebar (desktop collapse / mobile slide-in) + role-based visibility + route-based group open.
- * - **File प्रकार**: layout component (frontend)
+ * - **Purpose**: Navigate between main sections (Dashboard, Academic, Finance, Administration).
+ * - **Role in project**: App-wide sidebar inside the main layout.
+ * - **Logic type**: Responsive sidebar (desktop collapse / mobile slide-in), role-based visibility, auto-open groups by route.
+ * - **File type**: Layout component (frontend)
  *
- * Note: सध्या `role` local ref आहे (demo). भविष्यात याला auth store / backend roles नुसार सेट करू शकतो.
+ * Note: `role` is a local ref for demo purposes; wire it to the auth store or backend roles later.
  */
 
 import { ref, computed, watch, onMounted, onBeforeUnmount } from 'vue'
@@ -229,7 +229,7 @@ const { mobileOpen } = defineProps<{
   mobileOpen: boolean
 }>()
 
-// Parent layout कडे events emit करण्यासाठी
+// Emit events to the parent layout
 const emit = defineEmits<{
   (e: 'close-mobile'): void
   (e: 'toggle-mobile'): void
@@ -239,12 +239,12 @@ const route = useRoute()
 
 // Desktop collapse state
 const collapsed = ref(false)
-// User role (menu visibility साठी) – future: authStore मधून येऊ शकते
+// User role (controls menu visibility) — can come from authStore later
 const role = ref<'admin' | 'staff' | 'finance'>('admin')
-// वर्तमान viewport mobile आहे का?
+// Whether the current viewport is mobile
 const isMobile = ref(false)
 
-// Role नुसार Academic/Finance group visibility
+// Show Academic / Finance groups based on role
 const isAcademicVisible = computed(() => role.value === 'admin' || role.value === 'staff')
 const isFinanceVisible = computed(() => role.value === 'admin' || role.value === 'finance')
 
@@ -254,7 +254,7 @@ const openGroups = ref<Record<GroupKey, boolean>>({
   administration: false,
 })
 
-// Responsive breakpoint: mobile असताना collapse off ठेवतो
+// Responsive breakpoint: disable collapse styling on mobile
 const checkMobile = () => {
   isMobile.value = window.innerWidth <= 1024
 
@@ -263,31 +263,31 @@ const checkMobile = () => {
   }
 }
 
-// Desktop वरच manual collapse; mobile मध्ये फक्त slide-in/out
+// Manual collapse on desktop only; mobile uses slide-in/out
 const toggleSidebar = () => {
   if (isMobile.value) return
   collapsed.value = !collapsed.value
 }
 
-// Menu group expand/collapse (desktop-collapsed असताना group open होऊ नये)
+// Toggle menu groups (do not expand while desktop sidebar is collapsed)
 const toggleGroup = (group: GroupKey) => {
   if (collapsed.value && !isMobile.value) return
   openGroups.value[group] = !openGroups.value[group]
 }
 
-// Mobile मध्ये close button click → parent ला सांगा
+// Mobile close button: notify parent
 const emitCloseMobile = () => {
   emit('close-mobile')
 }
 
-// Menu item click नंतर mobile मध्ये sidebar auto close
+// Auto-close sidebar on mobile after a menu click
 const handleMenuClick = () => {
   if (isMobile.value) {
     emit('close-mobile')
   }
 }
 
-// Route path बदलल्यावर संबंधित group auto-open ठेवण्यासाठी watcher
+// Watch route changes to auto-open the relevant group
 watch(
   () => route.path,
   (path) => {
@@ -318,7 +318,7 @@ onMounted(() => {
   window.addEventListener('resize', checkMobile)
 })
 
-// Cleanup: listener काढून टाका
+// Cleanup: remove resize listener
 onBeforeUnmount(() => {
   window.removeEventListener('resize', checkMobile)
 })

@@ -1,10 +1,10 @@
 /**
  * `types/student.ts` (Student Types)
  *
- * - **कशासाठी**: Students module मधील data shape (Student + form input) define करणे.
- * - **Project मधली role**: Stores/Views/Reports मध्ये type-safety आणि consistent fields साठी वापर.
- * - **Logic प्रकार**: types/interfaces only (runtime logic नाही).
- * - **File प्रकार**: type (frontend)
+ * - **Purpose**: Define data shapes for the students module (stored record + form input).
+ * - **Role in project**: Shared types for stores, views, and reports.
+ * - **Logic type**: Types/interfaces only (no runtime logic).
+ * - **File type**: Type definitions (frontend)
  */
 
 export type StudentStatus = 'Active' | 'Inactive'
@@ -24,7 +24,7 @@ export interface Student {
   status: StudentStatus
 }
 
-// Form input shape (create/edit pages मध्ये v-model साठी)
+// Form input shape (create/edit pages, v-model)
 export interface StudentFormData {
   name: string
   email: string

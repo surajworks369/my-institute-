@@ -1,14 +1,14 @@
 <template>
   <!-- Main app shell: sidebar + navbar + content area + footer -->
   <div class="layout-shell">
-    <!-- Sidebar: desktop वर visible, mobile वर toggle -->
+    <!-- Sidebar: visible on desktop; toggle on mobile -->
     <Sidebar
       :mobile-open="mobileSidebarOpen"
       @close-mobile="closeMobileSidebar"
       @toggle-mobile="toggleMobileSidebar"
     />
 
-    <!-- Mobile overlay: sidebar open असताना outside click ने close -->
+    <!-- Mobile overlay: close sidebar on outside click -->
     <div v-if="mobileSidebarOpen" class="mobile-overlay" @click="closeMobileSidebar"></div>
 
     <div class="main-shell">
@@ -23,7 +23,7 @@
         <Navbar />
       </div>
 
-      <!-- Scrollable content area: route pages इथे render होतात -->
+      <!-- Scrollable content: active route renders here -->
       <main ref="contentShellRef" class="content-shell">
         <div class="content-inner">
           <router-view />
@@ -40,10 +40,10 @@
 /**
  * `layouts/MainLayout.vue` (Main Layout)
  *
- * - **कशासाठी**: Login नंतरच्या मुख्य app area साठी common layout provide करणे.
- * - **Project मधली role**: Sidebar/Nav/Footer आणि `<router-view />` content outlet ची frame.
- * - **Logic प्रकार**: Responsive sidebar (mobile), route change वर scroll reset, mobile title mapping.
- * - **File प्रकार**: layout (frontend)
+ * - **Purpose**: Shared shell for the main app area after login.
+ * - **Role in project**: Frame for sidebar, navbar, footer, and the `<router-view />` content outlet.
+ * - **Logic type**: Responsive sidebar, scroll reset on route change, mobile title mapping.
+ * - **File type**: Layout (frontend)
  */
 
 import { ref, watch, nextTick, onMounted, onBeforeUnmount, computed } from 'vue'
@@ -57,7 +57,7 @@ const contentShellRef = ref<HTMLElement | null>(null)
 const mobileSidebarOpen = ref(false)
 const isMobile = ref(false)
 
-// Mobile topbar title: route path वरून current section title ठरवतो
+// Mobile topbar title derived from the current route path
 const mobilePageTitle = computed(() => {
   const path = route.path
 
@@ -75,7 +75,7 @@ const mobilePageTitle = computed(() => {
   return 'Institute ERP'
 })
 
-// Responsive breakpoint check: desktop झाल्यावर mobile sidebar forced close
+// Responsive breakpoint: force-close mobile sidebar on desktop widths
 const checkMobile = () => {
   isMobile.value = window.innerWidth <= 1024
 

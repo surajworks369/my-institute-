@@ -1,48 +1,48 @@
-# vastu-bhandar
+# 🌐 Service Platform Web App
 
-This template should help get you started developing with Vue 3 in Vite.
+## 🚀 About Project
+This is a web-based platform developed to manage institute-related data and provide a structured interface for user interaction. The project is deployed live using Vercel.
 
-## Recommended IDE Setup
+---
 
-[VS Code](https://code.visualstudio.com/) + [Vue (Official)](https://marketplace.visualstudio.com/items?itemName=Vue.volar) (and disable Vetur).
+## 🎯 Purpose
+- To create a simple and responsive web interface
+- To understand real-world deployment and hosting
+- To practice frontend development and UI design
 
-## Recommended Browser Setup
+---
 
-- Chromium-based browsers (Chrome, Edge, Brave, etc.):
-  - [Vue.js devtools](https://chromewebstore.google.com/detail/vuejs-devtools/nhdogjmejiglipccpnnnanhbledajbpd)
-  - [Turn on Custom Object Formatter in Chrome DevTools](http://bit.ly/object-formatters)
-- Firefox:
-  - [Vue.js devtools](https://addons.mozilla.org/en-US/firefox/addon/vue-js-devtools/)
-  - [Turn on Custom Object Formatter in Firefox DevTools](https://fxdx.dev/firefox-devtools-custom-object-formatters/)
+## ⚙️ Features
+- Responsive web design
+- Structured UI for data display
+- Basic user interaction flow
+- Live deployment using Vercel
 
-## Type Support for `.vue` Imports in TS
+---
 
-TypeScript cannot handle type information for `.vue` imports by default, so we replace the `tsc` CLI with `vue-tsc` for type checking. In editors, we need [Volar](https://marketplace.visualstudio.com/items?itemName=Vue.volar) to make the TypeScript language service aware of `.vue` types.
+## 🛠️ Tech Stack
+- HTML
+- CSS
+- JavaScript
 
-## Customize configuration
+---
 
-See [Vite Configuration Reference](https://vite.dev/config/).
+## 🌍 Live Demo
+https://my-institute-two.vercel.app
 
-## Project Setup
+---
 
-```sh
-npm install
-```
+## 📱 Screenshots
+(Add screenshots here after uploading)
 
-### Compile and Hot-Reload for Development
+---
 
-```sh
-npm run dev
-```
+## 🧠 What I Learned
+- Frontend structuring and layout design
+- Responsive UI development
+- Deploying live projects using Vercel
 
-### Type-Check, Compile and Minify for Production
+---
 
-```sh
-npm run build
-```
-
-### Lint with [ESLint](https://eslint.org/)
-
-```sh
-npm run lint
-```
+## 🔗 Author
+Suraj Kule

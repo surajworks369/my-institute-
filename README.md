@@ -24,6 +24,10 @@ This is a web-based platform developed to manage institute-related data and prov
 - HTML
 - CSS
 - JavaScript
+- vue.js
+- typeScript
+- pinia
+- vite
 
 ---
 
